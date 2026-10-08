@@ -1,0 +1,636 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<style>html,body{height:100%;margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+<title>Реестр подрядчиков</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky bar on top; left rail lists work types in the order a house is built (geodesy -> landscaping); main column is a dense scannable list; one side panel for every form. */
+:root{
+  --bg:#EDF0EE; --surface:#FBFCFB; --raise:#F4F6F5; --ink:#17201D; --muted:#5C6A65; --line:#D3DAD6;
+  --accent:#0E6B5C; --accent-ink:#FFFFFF; --soft:#DCEAE5;
+  --ok:#1B7A44; --ok-bg:#DDF0E3; --warn:#8A5A00; --warn-bg:#F6E8C8; --bad:#B0302A; --bad-bg:#F7DEDB; --new:#55625E; --new-bg:#E3E8E5;
+  --s1:#3F6FD1; --s2:#8A6A3B; --s3:#B5532F; --s4:#7A52B8; --s5:#2E8C8C; --s6:#4B8A2E; --s7:#6B7280;
+  --font:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --shadow:0 12px 40px rgba(15,30,25,.18);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0F1514; --surface:#172020; --raise:#1D2928; --ink:#E5ECE9; --muted:#93A29D; --line:#2B3836;
+  --accent:#4FC2AC; --accent-ink:#05211C; --soft:#1C312D;
+  --ok:#6FD79A; --ok-bg:#173524; --warn:#F0C267; --warn-bg:#3A2E12; --bad:#FF9B93; --bad-bg:#431E1B; --new:#A9B6B1; --new-bg:#263231;
+  --s1:#7FA4F5; --s2:#C9A56B; --s3:#EC8A63; --s4:#B594EE; --s5:#63C7C7; --s6:#8CCB6A; --s7:#A3ABB5;
+  --shadow:0 12px 40px rgba(0,0,0,.55); color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0F1514; --surface:#172020; --raise:#1D2928; --ink:#E5ECE9; --muted:#93A29D; --line:#2B3836;
+  --accent:#4FC2AC; --accent-ink:#05211C; --soft:#1C312D;
+  --ok:#6FD79A; --ok-bg:#173524; --warn:#F0C267; --warn-bg:#3A2E12; --bad:#FF9B93; --bad-bg:#431E1B; --new:#A9B6B1; --new-bg:#263231;
+  --s1:#7FA4F5; --s2:#C9A56B; --s3:#EC8A63; --s4:#B594EE; --s5:#63C7C7; --s6:#8CCB6A; --s7:#A3ABB5;
+  --shadow:0 12px 40px rgba(0,0,0,.55); color-scheme:dark }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+
+/* ---------- auth ---------- */
+.auth{min-height:100%;display:grid;place-items:center;padding:48px 16px}
+.auth-card{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:28px;display:flex;flex-direction:column;gap:16px}
+.mark{font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:13px;display:flex;align-items:center;gap:10px}
+.mark i{width:14px;height:14px;background:var(--accent);display:block;clip-path:polygon(0 100%,0 35%,50% 0,100% 35%,100% 100%)}
+.auth h1{font-size:22px;margin:0;line-height:1.2;text-wrap:balance}
+.auth p{margin:0;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>span{font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.inp{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-height:40px}
+textarea.inp{resize:vertical;min-height:76px}
+.check{display:flex;gap:9px;align-items:center;color:var(--muted);font-size:14px}
+.err{color:var(--bad);font-size:14px;margin:0}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 14px;min-height:40px;font-weight:600;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.small{min-height:32px;padding:4px 10px;font-size:13px}
+.btn[disabled]{opacity:.55;cursor:default}
+
+/* ---------- app shell ---------- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar-in{max-width:1320px;margin:0 auto;padding:10px 16px;display:flex;gap:12px 16px;align-items:center;flex-wrap:wrap}
+.tabs{display:flex;gap:2px;background:var(--raise);border-radius:9px;padding:3px}
+.tab{border:0;background:transparent;border-radius:7px;padding:6px 12px;font-weight:600;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.search{flex:1 1 220px;min-width:0}
+.bar-actions{display:flex;gap:8px;flex-wrap:wrap}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:16px;padding-block:18px 60px;display:grid;grid-template-columns:250px minmax(0,1fr);gap:24px;align-items:start}
+.wrap.one{grid-template-columns:minmax(0,1fr)}
+
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 76px);max-height:calc(100vh - 100px);overflow:auto;display:flex;flex-direction:column;gap:14px;padding-right:4px}
+.rail h3{margin:0 0 4px;font-size:11px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);display:flex;gap:7px;align-items:center}
+.dot{width:8px;height:8px;border-radius:2px;flex:none;background:var(--s7)}
+.rail-g{display:flex;flex-direction:column;gap:1px}
+.rail-i{border:0;background:transparent;text-align:left;border-radius:7px;padding:5px 9px;display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.rail-i:hover{background:var(--raise)}
+.rail-i[aria-current="true"]{background:var(--soft);font-weight:600}
+.rail-i b{font-weight:500;color:var(--muted);font-size:13px}
+.rail-i.zero{color:var(--muted)}
+.rail-select{display:none}
+
+.tools{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.tools h2{margin:0;font-size:20px;line-height:1.2;flex:1 1 200px;min-width:0}
+.tools h2 small{display:block;font-size:13px;font-weight:400;color:var(--muted);margin-top:2px}
+.tools select{min-height:36px;padding:5px 9px;width:auto;max-width:100%;flex:1 1 150px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.pill{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:500}
+.pill[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1.2fr) minmax(0,.7fr) auto;gap:6px 18px;padding:12px 16px;border-top:1px solid var(--line);align-items:center;cursor:pointer}
+.row:first-child{border-top:0}
+.row:hover{background:var(--raise)}
+.r-name{font-weight:600;overflow-wrap:anywhere}
+.r-sub{color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;background:var(--raise);border-radius:6px;padding:2px 8px}
+.r-phones{display:flex;flex-direction:column;gap:2px;align-items:flex-end}
+.phone{display:flex;gap:6px;align-items:center;white-space:nowrap}
+.phone a{color:inherit;text-decoration:none}
+.phone a:hover{text-decoration:underline}
+.copy{border:1px solid var(--line);background:var(--surface);border-radius:6px;font-size:12px;padding:2px 7px;color:var(--muted)}
+.copy:hover{color:var(--ink);border-color:var(--muted)}
+.st{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;border-radius:6px;padding:2px 8px;white-space:nowrap}
+.st::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.st.new{color:var(--new);background:var(--new-bg)} .st.work{color:var(--ok);background:var(--ok-bg)}
+.st.reserve{color:var(--warn);background:var(--warn-bg)} .st.stop{color:var(--bad);background:var(--bad-bg)}
+.stars{letter-spacing:1px;color:var(--warn);font-size:13px;white-space:nowrap}
+.stars s{text-decoration:none;color:var(--line)}
+.r-meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.empty{padding:40px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
+
+/* ---------- rates ---------- */
+.tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{text-align:left;padding:9px 14px;border-top:1px solid var(--line);vertical-align:top}
+thead th{border-top:0;font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);font-weight:600;white-space:nowrap}
+td.num,th.num{text-align:right;white-space:nowrap}
+tr.sec td{background:var(--raise);font-weight:600;font-size:13px}
+tr.sec .btn{float:right}
+tbody tr.rr{cursor:pointer}
+tbody tr.rr:hover{background:var(--raise)}
+.cnt{display:inline-block;min-width:22px;text-align:center;border-radius:6px;background:var(--soft);font-size:12.5px;font-weight:600;padding:1px 6px}
+
+/* ---------- panel ---------- */
+.scrim{position:fixed;inset:0;background:rgba(10,20,17,.45);z-index:20;display:flex;justify-content:flex-end}
+.panel{width:min(560px,100%);height:100%;background:var(--surface);box-shadow:var(--shadow);display:flex;flex-direction:column}
+.p-head{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:calc(14px + env(safe-area-inset-top,0px)) 20px 14px;border-bottom:1px solid var(--line)}
+.p-head h2{margin:0;font-size:18px;line-height:1.25;min-width:0;overflow-wrap:anywhere}
+.p-body{padding:18px 20px;overflow:auto;display:flex;flex-direction:column;gap:16px;flex:1}
+.p-foot{display:flex;gap:8px;flex-wrap:wrap;justify-content:space-between;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.warnbox{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:9px 12px;font-size:14px}
+.cat-g{display:flex;flex-direction:column;gap:6px}
+.cat-g h4{margin:0;font-size:12px;color:var(--muted);font-weight:500;display:flex;gap:7px;align-items:center}
+.tog{position:relative}
+.tog input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.tog span{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:3px 11px;font-size:13px}
+.tog input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tog input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.rate-in{display:flex;gap:4px}
+.rate-in button{border:1px solid var(--line);background:var(--surface);border-radius:7px;min-width:38px;min-height:38px;font-weight:600;color:var(--muted)}
+.rate-in button.on{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.price-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto;gap:6px}
+.quote{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid var(--line)}
+.quote:first-of-type{border-top:0}
+.linkish{border:0;background:none;padding:0;color:var(--accent);font-weight:600;text-align:left}
+.toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:9px;z-index:40;max-width:calc(100% - 32px);font-size:14px}
+.menu{position:relative}
+.menu-list{position:absolute;right:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:5px;min-width:230px;z-index:10;display:flex;flex-direction:column}
+.menu-list button{border:0;background:none;text-align:left;padding:8px 10px;border-radius:6px}
+.menu-list button:hover{background:var(--raise)}
+
+@media (max-width:900px){
+  .wrap{grid-template-columns:minmax(0,1fr)}
+  .rail{display:none}
+  .rail-select{display:block}
+  .row{grid-template-columns:minmax(0,1fr)}
+  .r-phones{align-items:flex-start}
+  .grid2{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:no-preference){ .panel{animation:slide .18s ease-out} @keyframes slide{from{transform:translateX(24px)}to{transform:none}} }
+</style>
+
+</head>
+<body>
+<div id="auth" class="auth">
+  <div class="auth-card">
+    <div class="mark"><i></i>Реестр подрядчиков</div>
+    <div id="authBody"><p>Загрузка…</p></div>
+  </div>
+</div>
+
+<div id="app" hidden>
+  <header class="bar"><div class="bar-in">
+    <div class="mark"><i></i>Реестр подрядчиков</div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-act="tab" data-tab="people" aria-selected="true">Подрядчики</button>
+      <button class="tab" role="tab" data-act="tab" data-tab="rates" aria-selected="false">Расценки</button>
+    </div>
+    <input id="q" class="inp search" type="search" placeholder="Поиск: имя, телефон, город, заметка" autocomplete="off">
+    <div class="bar-actions">
+      <button class="btn primary" data-act="add">Добавить</button>
+      <button class="btn" data-act="import">Вставить списком</button>
+      <div class="menu">
+        <button class="btn" data-act="menu" aria-haspopup="true">Ещё</button>
+        <div class="menu-list" id="menuList" hidden>
+          <button data-act="addcat">Добавить вид работ</button>
+          <button data-act="export" id="exportBtn">Выгрузить в Excel (CSV)</button>
+          <button data-act="passwd">Сменить логин и пароль</button>
+          <button data-act="logout">Выйти</button>
+        </div>
+      </div>
+    </div>
+  </div></header>
+  <div class="wrap" id="wrap">
+    <nav class="rail" id="rail" aria-label="Виды работ"></nav>
+    <main id="main"></main>
+  </div>
+</div>
+
+<div id="scrim" class="scrim" hidden><aside class="panel" id="panel" role="dialog" aria-modal="true"></aside></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+(function(){
+"use strict";
+var STAGES=[{id:"s1",name:"Подготовка"},{id:"s2",name:"Нулевой цикл"},{id:"s3",name:"Коробка и кровля"},{id:"s4",name:"Инженерные сети"},{id:"s5",name:"Отделка"},{id:"s6",name:"Участок"},{id:"s7",name:"Контроль"}];
+var DEFAULT_CATS=[
+ {id:"geo",name:"Геодезия",stage:"s1"},
+ {id:"bur",name:"Буровые и свайные работы",stage:"s2"},{id:"mono",name:"Монолитные работы",stage:"s2"},
+ {id:"klad",name:"Кладка: несущие стены и перегородки",stage:"s3"},{id:"fasad",name:"Кладка: фасадная",stage:"s3"},{id:"krov",name:"Кровельные работы",stage:"s3"},
+ {id:"el",name:"Электрика",stage:"s4"},{id:"voda",name:"Водоснабжение",stage:"s4"},{id:"kan",name:"Канализация",stage:"s4"},{id:"otop",name:"Отопление",stage:"s4"},{id:"kond",name:"Кондиционирование",stage:"s4"},{id:"vent",name:"Вентиляция",stage:"s4"},{id:"los",name:"ЛОС",stage:"s4"},
+ {id:"shtuk",name:"Штукатурка и стяжка",stage:"s5"},{id:"otd",name:"Отделка и плитка",stage:"s5"},
+ {id:"blag",name:"Благоустройство",stage:"s6"},{id:"bass",name:"Бассейны",stage:"s6"},{id:"bani",name:"Бани",stage:"s6"},
+ {id:"nadzor",name:"Технадзор",stage:"s7"},{id:"lab",name:"Лаборатория",stage:"s7"}];
+var STATUS={new:"Не проверен",work:"Работаем",reserve:"Резерв",stop:"Не работать"};
+var FORMS=["","Самозанятый","ИП","ООО","Бригада без оформления"];
+var VATS=["","Без НДС","С НДС"];
+
+var S={tok:null,sha:null,data:null,dek:null,vault:null,cats:DEFAULT_CATS,list:[],rates:[],tab:"people",q:"",cat:"all",status:"all",city:"",sort:"name",sheet:null,loaded:false,ctx:null};
+var $=function(id){return document.getElementById(id)};
+var te=new TextEncoder(),td=new TextDecoder();
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function b64(buf){var a=new Uint8Array(buf),s="";for(var i=0;i<a.length;i++)s+=String.fromCharCode(a[i]);return btoa(s)}
+function unb64(s){var b=atob(s),a=new Uint8Array(b.length);for(var i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+function rnd(n){return crypto.getRandomValues(new Uint8Array(n))}
+function newId(){return "c"+Array.from(rnd(8)).map(function(x){return (x%36).toString(36)}).join("")}
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){return null}}
+
+/* ---------- crypto: records are AES-GCM encrypted with a data key; the data key is wrapped by a key derived from login+password ---------- */
+async function deriveKek(login,pass,saltB64,iter){
+  var salt0=unb64(saltB64),lg=te.encode(login.trim().toLowerCase()),salt=new Uint8Array(salt0.length+lg.length);salt.set(salt0);salt.set(lg,salt0.length);
+  var base=await crypto.subtle.importKey("raw",te.encode(pass.normalize("NFKC")),"PBKDF2",false,["deriveKey"]);
+  return crypto.subtle.deriveKey({name:"PBKDF2",salt:salt,iterations:iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["encrypt","decrypt"]);
+}
+function importDek(raw){return crypto.subtle.importKey("raw",raw,"AES-GCM",true,["encrypt","decrypt"])}
+async function seal(obj,key){var iv=rnd(12);var ct=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},key||S.dek,te.encode(JSON.stringify(obj)));return{iv:b64(iv),ct:b64(ct)}}
+async function unseal(d,key){var pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(d.iv)},key||S.dek,unb64(d.ct));return JSON.parse(td.decode(pt))}
+async function makeVault(login,pass,dekRaw,extra){
+  var salt=b64(rnd(16)),iter=210000,kek=await deriveKek(login,pass,salt,iter),iv=rnd(12);
+  var wrapped=await crypto.subtle.encrypt({name:"AES-GCM",iv:iv},kek,dekRaw);
+  var dek=await importDek(dekRaw),chk=await seal("ok",dek);
+  return Object.assign({v:1,salt:salt,iter:iter,iv:b64(iv),wrapped:b64(wrapped),civ:chk.iv,cct:chk.ct},extra||{});
+}
+async function checkDek(dek,v){try{return (await unseal({iv:v.civ,ct:v.cct},dek))==="ok"}catch(e){return false}}
+
+/* ---------- helpers ---------- */
+function normPhone(s){var d=String(s).replace(/\D/g,"");if(d.length===11&&d[0]==="8")d="7"+d.slice(1);if(d.length===10)d="7"+d;return d}
+function fmtPhone(d){return d.length===11&&d[0]==="7"?"+7 "+d.slice(1,4)+" "+d.slice(4,7)+"-"+d.slice(7,9)+"-"+d.slice(9):(d?"+"+d:"")}
+function parsePhones(s){var m=String(s).match(/\+?\d[\d\s()\-]{8,}\d/g)||[];var out=[];m.forEach(function(x){var d=normPhone(x);if(d.length>=10&&out.indexOf(d)<0)out.push(d)});return out}
+function norm(s){return String(s||"").toLowerCase().replace(/ё/g,"е")}
+function catById(id){for(var i=0;i<S.cats.length;i++)if(S.cats[i].id===id)return S.cats[i];return null}
+function toast(msg){var t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(function(){t.hidden=true},3200)}
+function failMsg(e){return e&&e.code==="auth"?"Ключ доступа к хранилищу больше не действует. Его нужно выпустить заново":e&&e.code==="busy"?"Кто-то сохраняет одновременно с вами. Повторите через несколько секунд":"Не удалось сохранить. Проверьте интернет и попробуйте ещё раз"}
+function stars(n){n=n||0;if(!n)return "";var s="";for(var i=1;i<=5;i++)s+=i<=n?"★":"<s>★</s>";return '<span class="stars" title="Оценка '+n+' из 5">'+s+"</span>"}
+
+/* ---------- boot + auth ---------- */
+/* ---------- storage: one encrypted file in a private GitHub repository; every save is a commit ---------- */
+var API="https://api.github.com/repos/";
+function gh(path,opt){opt=opt||{};opt.headers={Authorization:"Bearer "+S.tok,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};opt.cache="no-store";return fetch(API+path,opt)}
+function apply(){
+  var d=S.data;S.list=Object.keys(d.contractors||{}).map(function(id){return Object.assign({},d.contractors[id],{id:id})});
+  S.rates=Object.keys(d.rates||{}).map(function(id){return Object.assign({},d.rates[id],{id:id})}).sort(function(a,b){return (a.order||0)-(b.order||0)});
+  if(!S.sheet&&S.rates[0])S.sheet=S.rates[0].id;
+  S.cats=d.cats&&d.cats.length?d.cats:DEFAULT_CATS;S.loaded=true;render();
+}
+async function load(){
+  var r=await gh(S.vault.data+"/contents/data.json?t="+Date.now());
+  if(!r.ok)throw{code:r.status===401||r.status===403?"auth":"net"};
+  var j=await r.json();if(j.sha===S.sha&&S.data)return;
+  var d=await unseal(JSON.parse(atob(j.content.replace(/\s/g,""))));S.data=d;S.sha=j.sha;apply();
+}
+var chain=Promise.resolve();
+function mutate(fn){
+  var p=chain.then(async function(){
+    for(var i=0;i<4;i++){
+      await load();var d=JSON.parse(JSON.stringify(S.data));fn(d);var s=await seal(d);
+      var r=await gh(S.vault.data+"/contents/data.json",{method:"PUT",body:JSON.stringify({message:"Изменение реестра",content:btoa(JSON.stringify(s)),sha:S.sha})});
+      if(r.ok){var j=await r.json();S.sha=j.content.sha;S.data=d;apply();return}
+      if(r.status===401||r.status===403)throw{code:"auth"};
+      if(r.status!==409&&r.status!==422)throw{code:"net"};
+      S.sha=null;await new Promise(function(ok){setTimeout(ok,700)});
+    }
+    throw{code:"busy"};
+  });
+  chain=p.catch(function(){});return p;
+}
+async function start(){S.tok=await unseal({iv:S.vault.tiv,ct:S.vault.tct});await load();enter()}
+async function boot(){
+  var r=null;try{r=await fetch("vault.json?t="+Date.now(),{cache:"no-store"})}catch(e){}
+  if(r&&r.status===404){authView("setup");return}
+  if(!r||!r.ok){authView("nodb");return}
+  try{S.vault=await r.json()}catch(e){authView("nodb");return}
+  var saved=ls("rp.dek");
+  if(saved){try{var dek=await importDek(unb64(saved));if(await checkDek(dek,S.vault)){S.dek=dek;try{await start();return}catch(e){if(e&&e.code==="auth"){authView("rekey");return}S.dek=null;authView("login","Не удалось загрузить данные. Проверьте интернет и войдите ещё раз");return}}}catch(e){} ls("rp.dek",null)}
+  authView("login");
+}
+function authView(mode,err){
+  var h="";
+  if(mode==="nodb"){h='<h1>Реестр недоступен</h1><p>Не удалось загрузить страницу входа. Проверьте интернет и обновите страницу.</p>'}
+  else if(mode==="rekey"){
+    h='<form id="rekeyForm" style="display:flex;flex-direction:column;gap:14px"><h1>Нужен новый ключ</h1><p>Вход верный, но срок действия ключа доступа GitHub закончился или ключ отозван. Владелец учётной записи GitHub выпускает новый ключ с доступом к хранилищам реестра (Contents: Read and write) и вставляет его сюда.</p>'+
+      '<label class="field"><span>Новый ключ доступа GitHub</span><input class="inp mono" id="sKey" type="password" autocomplete="off" placeholder="github_pat_…" required></label>'+
+      (err?'<p class="err">'+esc(err)+"</p>":"")+
+      '<button class="btn primary" id="loginBtn">Сохранить ключ</button></form>';
+  }
+  else if(mode==="login"){
+    h='<form id="loginForm" style="display:flex;flex-direction:column;gap:14px"><h1>Вход в реестр</h1>'+
+      '<label class="field"><span>Логин</span><input class="inp" id="login" autocomplete="username" required></label>'+
+      '<label class="field"><span>Пароль</span><input class="inp" id="password" type="password" autocomplete="current-password" required></label>'+
+      '<label class="check"><input type="checkbox" id="remember"> Запомнить на этом устройстве</label>'+
+      (err?'<p class="err">'+esc(err)+"</p>":"")+
+      '<button class="btn primary" id="loginBtn">Войти</button></form>';
+  } else {
+    h='<form id="setupForm" style="display:flex;flex-direction:column;gap:14px"><h1>Первая настройка</h1><p>Этот шаг выполняется один раз. Ключ доступа и пароль остаются в вашем браузере: ключ шифруется паролем и только в таком виде сохраняется на сайте.</p>'+
+      '<label class="field"><span>Ключ доступа GitHub</span><input class="inp mono" id="sKey" type="password" autocomplete="off" placeholder="github_pat_…" required></label>'+
+      '<label class="field"><span>Логин для входа в реестр</span><input class="inp" id="login" autocomplete="off" required value="reestr"></label>'+
+      '<label class="field"><span>Пароль (не короче 16 символов)</span><input class="inp mono" id="password" type="text" autocomplete="off" required></label>'+
+      '<button type="button" class="btn" data-act="genpass">Придумать надёжный пароль</button>'+
+      '<p style="font-size:13px">Запишите логин и пароль до нажатия кнопки. Восстановить забытый пароль нельзя.</p>'+
+      (err?'<p class="err">'+esc(err)+"</p>":"")+
+      '<button class="btn primary" id="loginBtn">Настроить реестр</button></form>';
+  }
+  $("authBody").innerHTML=h;$("auth").hidden=false;$("app").hidden=true;
+}
+document.addEventListener("submit",async function(ev){
+  var f=ev.target;ev.preventDefault();
+  if(f.id==="loginForm"){
+    var btn=$("loginBtn");btn.disabled=true;btn.textContent="Проверяю…";
+    var login=$("login").value,pass=$("password").value,rem=$("remember").checked;
+    var dekOk=false;
+    try{
+      var kek=await deriveKek(login,pass,S.vault.salt,S.vault.iter);
+      var raw=await crypto.subtle.decrypt({name:"AES-GCM",iv:unb64(S.vault.iv)},kek,unb64(S.vault.wrapped));
+      S.dek=await importDek(raw);dekOk=true;if(rem)ls("rp.dek",b64(raw));await start();
+    }catch(e){S.dek=dekOk?S.dek:null;if(dekOk&&e&&e.code==="auth"){authView("rekey");return}authView("login",dekOk?"Вход верный, но данные не загрузились. Проверьте интернет":"Неверный логин или пароль");try{$("login").value=login}catch(x){}}
+  } else if(f.id==="rekeyForm"){
+    var nk=$("sKey").value.trim();$("loginBtn").disabled=true;
+    try{
+      S.tok=nk;var g0=await gh(S.vault.site+"/contents/vault.json?t="+Date.now());if(!g0.ok)throw 0;
+      var t2=await seal(nk),v2=Object.assign({},S.vault,{tiv:t2.iv,tct:t2.ct});
+      var w0=await gh(S.vault.site+"/contents/vault.json",{method:"PUT",body:JSON.stringify({message:"Новый ключ доступа",content:btoa(JSON.stringify(v2)),sha:(await g0.json()).sha})});if(!w0.ok)throw 0;
+      S.vault=v2;await load();enter();toast("Ключ заменён. Для остальных заработает через одну-две минуты");
+    }catch(e){authView("rekey","Ключ не подошёл. Проверьте, что он скопирован целиком и имеет доступ к обоим хранилищам.")}
+  } else if(f.id==="setupForm"){
+    var key=$("sKey").value.trim(),lg=$("login").value.trim(),pw=$("password").value,sb=$("loginBtn");
+    var back=function(msg){authView("setup",msg);$("sKey").value=key;$("login").value=lg;$("password").value=pw};
+    if(pw.length<16){back("Пароль должен быть не короче 16 символов. Нажмите «Придумать надёжный пароль».");return}
+    sb.disabled=true;sb.textContent="Настраиваю…";
+    var own=location.hostname.split(".")[0],site=location.pathname.split("/").filter(Boolean)[0]||"reestr",cfg={site:own+"/"+site,data:own+"/"+site+"-data"};
+    try{
+      S.tok=key;
+      var sr=await gh(cfg.data+"/contents/seed.json?t="+Date.now());
+      if(!sr.ok){S.tok=null;back(sr.status===401?"GitHub не принял ключ. Проверьте, что он скопирован целиком.":"Ключ не видит хранилище с данными. Проверьте, что ключу выдан доступ к обоим хранилищам и право Contents: Read and write.");return}
+      var sj=await sr.json(),seed=JSON.parse(td.decode(unb64(sj.content.replace(/\s/g,"")))),now=Date.now(),cs={};
+      seed.contractors.forEach(function(c,i){cs[newId()]=Object.assign({},c,{created:now,updated:now+i})});
+      var raw=rnd(32),dek=await importDek(raw),body=await seal({contractors:cs,rates:seed.rates,cats:null},dek),tk=await seal(key,dek);
+      var put=async function(path,obj,msg){var g=await gh(path+"?t="+Date.now()),sha=g.ok?(await g.json()).sha:undefined;
+        var w=await gh(path,{method:"PUT",body:JSON.stringify({message:msg,content:btoa(JSON.stringify(obj)),sha:sha})});if(!w.ok)throw{code:"put",status:w.status}};
+      await put(cfg.data+"/contents/data.json",body,"Первая загрузка реестра");
+      var v=await makeVault(lg,pw,raw,{tiv:tk.iv,tct:tk.ct,data:cfg.data,site:cfg.site});
+      await put(cfg.site+"/contents/vault.json",v,"Настройка входа");
+      await gh(cfg.data+"/contents/seed.json",{method:"DELETE",body:JSON.stringify({message:"Исходный список больше не нужен",sha:sj.sha})});
+      S.vault=v;S.dek=dek;await load();enter();toast("Реестр настроен. Вход заработает для всех через одну-две минуты");
+    }catch(e){S.tok=null;back("Не удалось завершить настройку. Проверьте интернет и права ключа, затем попробуйте ещё раз.")}
+  } else if(f.id==="pForm"){ if(S.ctx&&S.ctx.submit)S.ctx.submit() }
+});
+
+function enter(){
+  $("auth").hidden=true;$("app").hidden=false;render();
+  var tick=function(){if(document.visibilityState==="visible"&&S.tok)chain=chain.then(load).catch(function(){})};
+  setInterval(tick,45000);document.addEventListener("visibilitychange",tick);
+}
+
+/* ---------- filtering ---------- */
+function filtered(){
+  var q=norm(S.q).trim(),qd=q.replace(/\D/g,"");
+  var arr=S.list.filter(function(c){
+    if(S.cat==="none"){if((c.cats||[]).some(catById))return false}
+    else if(S.cat!=="all"&&(c.cats||[]).indexOf(S.cat)<0)return false;
+    if(S.status!=="all"&&(c.status||"new")!==S.status)return false;
+    if(S.city&&c.city!==S.city)return false;
+    if(q){var hay=norm([c.name,c.spec,c.city,c.note,c.objects,(c.cats||[]).map(function(x){var k=catById(x);return k?k.name:""}).join(" ")].join(" "));
+      var hit=hay.indexOf(q)>=0;if(!hit&&qd.length>=3)hit=(c.phones||[]).some(function(p){return p.indexOf(qd)>=0||p.indexOf(normPhone(qd).slice(1))>=0&&qd.length>=10});
+      if(!hit)return false}
+    return true});
+  arr.sort(function(a,b){
+    if(S.sort==="rating")return (b.rating||0)-(a.rating||0)||norm(a.name).localeCompare(norm(b.name),"ru");
+    if(S.sort==="new")return (b.updated||0)-(a.updated||0);
+    return norm(a.name).localeCompare(norm(b.name),"ru")});
+  return arr;
+}
+function counts(){var m={none:0};S.list.forEach(function(c){var any=false;(c.cats||[]).forEach(function(x){if(catById(x)){m[x]=(m[x]||0)+1;any=true}});if(!any)m.none++});return m}
+
+/* ---------- render ---------- */
+function render(){
+  if($("app").hidden)return;
+  document.querySelectorAll(".tab").forEach(function(t){t.setAttribute("aria-selected",String(t.dataset.tab===S.tab))});
+  $("wrap").classList.toggle("one",S.tab==="rates");$("rail").hidden=S.tab==="rates";
+  if(S.tab==="rates"){renderRates();return}
+  var m=counts(),r='<div class="rail-g"><button class="rail-i" data-act="cat" data-cat="all" aria-current="'+(S.cat==="all")+'">Все подрядчики <b>'+S.list.length+"</b></button>"+
+    (m.none?'<button class="rail-i" data-act="cat" data-cat="none" aria-current="'+(S.cat==="none")+'">Без вида работ <b>'+m.none+"</b></button>":"")+"</div>";
+  var opts='<option value="all">Все виды работ ('+S.list.length+")</option>"+(m.none?'<option value="none"'+(S.cat==="none"?" selected":"")+">Без вида работ ("+m.none+")</option>":"");
+  STAGES.forEach(function(st){var cs=S.cats.filter(function(c){return c.stage===st.id});if(!cs.length)return;
+    r+='<div class="rail-g"><h3><i class="dot" style="background:var(--'+st.id+')"></i>'+esc(st.name)+"</h3>";opts+='<optgroup label="'+esc(st.name)+'">';
+    cs.forEach(function(c){var n=m[c.id]||0;r+='<button class="rail-i'+(n?"":" zero")+'" data-act="cat" data-cat="'+esc(c.id)+'" aria-current="'+(S.cat===c.id)+'">'+esc(c.name)+" <b>"+n+"</b></button>";
+      opts+='<option value="'+esc(c.id)+'"'+(S.cat===c.id?" selected":"")+">"+esc(c.name)+" ("+n+")</option>"});
+    r+="</div>";opts+="</optgroup>"});
+  $("rail").innerHTML=r;
+  var arr=filtered(),cur=S.cat==="all"?"Все подрядчики":S.cat==="none"?"Без вида работ":(catById(S.cat)||{}).name||"";
+  var cities=[];S.list.forEach(function(c){if(c.city&&cities.indexOf(c.city)<0)cities.push(c.city)});cities.sort(function(a,b){return a.localeCompare(b,"ru")});
+  var h='<div class="tools"><h2>'+esc(cur)+"<small>"+(S.loaded?"Показано "+arr.length+" из "+S.list.length:"Загружаю список…")+"</small></h2>"+
+    '<select class="inp rail-select" id="catSel" aria-label="Вид работ">'+opts+"</select>"+
+    '<select class="inp" id="citySel" aria-label="Город"><option value="">Все города</option>'+cities.map(function(c){return '<option'+(S.city===c?" selected":"")+">"+esc(c)+"</option>"}).join("")+"</select>"+
+    '<select class="inp" id="sortSel" aria-label="Сортировка"><option value="name"'+(S.sort==="name"?" selected":"")+'>По имени</option><option value="rating"'+(S.sort==="rating"?" selected":"")+'>По оценке</option><option value="new"'+(S.sort==="new"?" selected":"")+">Недавно изменённые</option></select></div>";
+  h+='<div class="seg">'+[["all","Все статусы"],["work","Работаем"],["new","Не проверен"],["reserve","Резерв"],["stop","Не работать"]].map(function(x){return '<button class="pill" data-act="status" data-status="'+x[0]+'" aria-pressed="'+(S.status===x[0])+'">'+x[1]+"</button>"}).join("")+"</div>";
+  if(!arr.length){
+    h+='<div class="list"><div class="empty">'+(!S.loaded?"<b>Загружаю подрядчиков…</b>":S.list.length?"<b>Никого не найдено</b>Измените поиск или фильтры.":"<b>В реестре пока пусто</b>Нажмите «Добавить» или «Вставить списком», чтобы внести первых подрядчиков.")+"</div></div>";
+  } else {
+    h+='<div class="list">'+arr.map(function(c){
+      var chips=(c.cats||[]).map(function(x){var k=catById(x);return k?'<span class="chip"><i class="dot" style="background:var(--'+k.stage+')"></i>'+esc(k.name)+"</span>":""}).join("");
+      var sub=[c.spec,c.city].filter(Boolean).join(" · ");
+      var ph=(c.phones||[]).map(function(p){return '<span class="phone mono"><a href="tel:+'+p+'" data-stop="1">'+fmtPhone(p)+'</a><button class="copy" data-act="copy" data-v="'+fmtPhone(p)+'">Копировать</button></span>'}).join("")||'<span class="r-sub">Телефон не указан</span>';
+      return '<div class="row" data-act="open" data-id="'+esc(c.id)+'" tabindex="0" role="button">'+
+        '<div><div class="r-name">'+esc(c.name)+"</div>"+(sub?'<div class="r-sub">'+esc(sub)+"</div>":"")+(c.note?'<div class="r-sub">'+esc(c.note)+"</div>":"")+"</div>"+
+        '<div class="chips">'+(chips||'<span class="r-sub">Вид работ не указан</span>')+"</div>"+
+        '<div class="r-meta"><span class="st '+esc(c.status||"new")+'">'+STATUS[c.status||"new"]+"</span>"+stars(c.rating)+((c.prices||[]).length?'<span class="r-sub">расценок: '+c.prices.length+"</span>":"")+"</div>"+
+        '<div class="r-phones">'+ph+"</div></div>"}).join("")+"</div>";
+  }
+  $("main").innerHTML=h;
+}
+function quotesFor(work){var out=[];S.list.forEach(function(c){(c.prices||[]).forEach(function(p){if(p.work===work)out.push({c:c,p:p})})});return out}
+function renderRates(){
+  var sh=S.rates.filter(function(x){return x.id===S.sheet})[0]||S.rates[0];
+  var h='<div class="tools"><h2>Расценки<small>Справочные цены и предложения подрядчиков по каждой работе</small></h2></div>';
+  if(!sh){$("main").innerHTML=h+'<div class="list"><div class="empty"><b>Расценок пока нет</b>Они появятся здесь после загрузки прайсов.</div></div>';return}
+  h+='<div class="seg">'+S.rates.map(function(x){return '<button class="pill" data-act="sheet" data-id="'+esc(x.id)+'" aria-pressed="'+(x.id===sh.id)+'">'+esc(x.title)+"</button>"}).join("")+"</div>";
+  h+='<div class="tbl-wrap"><table><thead><tr><th>Работа</th><th>Ед.</th>'+sh.cols.map(function(c){return '<th class="num">'+esc(c)+"</th>"}).join("")+'<th class="num">Подрядчики</th></tr></thead><tbody>';
+  sh.sections.forEach(function(sec,si){
+    h+='<tr class="sec"><td colspan="'+(3+sh.cols.length)+'">'+esc(sec.title)+'<button class="btn small" data-act="raterow" data-s="'+si+'" data-r="-1">Добавить строку</button></td></tr>';
+    sec.rows.forEach(function(r,ri){var n=quotesFor(r.work).length;
+      h+='<tr class="rr" data-act="raterow" data-s="'+si+'" data-r="'+ri+'"><td>'+esc(r.work)+"</td><td>"+esc(r.unit||"")+"</td>"+sh.cols.map(function(c,ci){var v=(r.p||[])[ci];return '<td class="num mono">'+(v===""||v==null?"—":esc(v))+"</td>"}).join("")+'<td class="num">'+(n?'<span class="cnt">'+n+"</span>":"—")+"</td></tr>"})});
+  h+="</tbody></table></div>";
+  $("main").innerHTML=h;
+}
+
+/* ---------- panel ---------- */
+function openPanel(title,body,foot,ctx){
+  S.ctx=ctx||{};
+  $("panel").innerHTML='<form id="pForm" style="display:contents" novalidate><div class="p-head"><h2>'+esc(title)+'</h2><button type="button" class="btn ghost" data-act="close" aria-label="Закрыть">Закрыть</button></div><div class="p-body">'+body+'</div><div class="p-foot">'+foot+"</div></form>";
+  $("scrim").hidden=false;var f=$("panel").querySelector("input,textarea,select");if(f&&!ctx.nofocus)f.focus();
+}
+function closePanel(){$("scrim").hidden=true;$("panel").innerHTML="";S.ctx=null}
+
+function priceRowHtml(p){return '<div class="price-row"><input class="inp" name="pw" list="worksDl" placeholder="Работа" value="'+esc(p.work||"")+'"><input class="inp" name="pp" placeholder="Цена" value="'+esc(p.price||"")+'"><button type="button" class="btn ghost" data-act="delprice" aria-label="Удалить расценку">×</button></div>'}
+function openContractor(id){
+  var c=id?S.list.filter(function(x){return x.id===id})[0]:null;if(id&&!c)return;
+  var d=c||{name:"",spec:"",cats:S.cat!=="all"&&S.cat!=="none"?[S.cat]:[],city:"",phones:[],form:"",vat:"",crew:"",rating:0,status:"new",objects:"",note:"",prices:[]};
+  var cats=STAGES.map(function(st){var cs=S.cats.filter(function(k){return k.stage===st.id});if(!cs.length)return "";
+    return '<div class="cat-g"><h4><i class="dot" style="background:var(--'+st.id+')"></i>'+esc(st.name)+'</h4><div class="chips">'+cs.map(function(k){return '<label class="tog"><input type="checkbox" name="cat" value="'+esc(k.id)+'"'+((d.cats||[]).indexOf(k.id)>=0?" checked":"")+"><span>"+esc(k.name)+"</span></label>"}).join("")+"</div></div>"}).join("");
+  var works=[];S.rates.forEach(function(sh){sh.sections.forEach(function(s){s.rows.forEach(function(r){works.push(r.work)})})});
+  var cities=[];S.list.forEach(function(x){if(x.city&&cities.indexOf(x.city)<0)cities.push(x.city)});
+  var links=(d.phones||[]).map(function(p){return '<div class="phone mono">'+fmtPhone(p)+' <button type="button" class="copy" data-act="copy" data-v="'+fmtPhone(p)+'">Копировать</button> <a class="copy" target="_blank" rel="noopener" href="https://wa.me/'+p+'">WhatsApp</a> <a class="copy" target="_blank" rel="noopener" href="https://t.me/+'+p+'">Telegram</a></div>'}).join("");
+  var body=(links?'<div style="display:flex;flex-direction:column;gap:6px">'+links+"</div>":"")+
+    '<label class="field"><span>Как записан</span><input class="inp" id="fName" required value="'+esc(d.name)+'" placeholder="Николай кровельщик"></label>'+
+    '<div class="grid2"><label class="field"><span>Телефоны</span><input class="inp mono" id="fPhones" inputmode="tel" value="'+esc((d.phones||[]).map(fmtPhone).join(", "))+'" placeholder="+7 918 000-00-00"></label>'+
+    '<label class="field"><span>Город или район</span><input class="inp" id="fCity" list="cityDl" value="'+esc(d.city||"")+'"><datalist id="cityDl">'+cities.map(function(x){return '<option value="'+esc(x)+'">'}).join("")+"</datalist></label></div>"+
+    '<div class="field"><span>Виды работ</span>'+cats+"</div>"+
+    '<label class="field"><span>Специализация</span><input class="inp" id="fSpec" value="'+esc(d.spec||"")+'" placeholder="Например: фальц, автобур, бурение на воду"></label>'+
+    '<div class="grid2"><label class="field"><span>Статус</span><select class="inp" id="fStatus">'+Object.keys(STATUS).map(function(k){return '<option value="'+k+'"'+((d.status||"new")===k?" selected":"")+">"+STATUS[k]+"</option>"}).join("")+"</select></label>"+
+    '<div class="field"><span>Оценка</span><div class="rate-in" id="fRating" data-v="'+(d.rating||0)+'">'+[1,2,3,4,5].map(function(n){return '<button type="button" data-act="rate" data-n="'+n+'" class="'+(n<=(d.rating||0)?"on":"")+'" aria-label="Оценка '+n+'">'+n+"</button>"}).join("")+"</div></div></div>"+
+    '<div class="grid2"><label class="field"><span>Оформление</span><select class="inp" id="fForm">'+FORMS.map(function(f){return '<option value="'+f+'"'+((d.form||"")===f?" selected":"")+">"+(f||"Не указано")+"</option>"}).join("")+"</select></label>"+
+    '<label class="field"><span>НДС</span><select class="inp" id="fVat">'+VATS.map(function(f){return '<option value="'+f+'"'+((d.vat||"")===f?" selected":"")+">"+(f||"Не указано")+"</option>"}).join("")+"</select></label></div>"+
+    '<div class="grid2"><label class="field"><span>Бригада и техника</span><input class="inp" id="fCrew" value="'+esc(d.crew||"")+'" placeholder="4 человека, своя опалубка"></label>'+
+    '<label class="field"><span>Наши объекты</span><input class="inp" id="fObjects" value="'+esc(d.objects||"")+'" placeholder="Где уже работал у нас"></label></div>'+
+    '<label class="field"><span>Заметка</span><textarea class="inp" id="fNote" placeholder="Качество, сроки, как с ним работать">'+esc(d.note||"")+"</textarea></label>"+
+    '<div class="field"><span>Расценки подрядчика</span><div id="fPrices" style="display:flex;flex-direction:column;gap:6px">'+(d.prices||[]).map(priceRowHtml).join("")+'</div><datalist id="worksDl">'+works.map(function(x){return '<option value="'+esc(x)+'">'}).join("")+'</datalist><div><button type="button" class="btn small" data-act="addprice">Добавить расценку</button></div></div>'+
+    '<div id="fWarn"></div>';
+  var foot=(c?'<button type="button" class="btn danger" data-act="del">Удалить</button>':"<span></span>")+'<button class="btn primary" id="pSave">Сохранить</button>';
+  openPanel(c?c.name:"Новый подрядчик",body,foot,{nofocus:!!c,dupOk:false,delArmed:false,id:id,submit:async function(){
+    var name=$("fName").value.trim();if(!name){$("fName").focus();return}
+    var phones=parsePhones($("fPhones").value);
+    var raw=$("fPhones").value.trim();
+    if(raw&&!phones.length){$("fWarn").innerHTML='<div class="warnbox">Не удалось разобрать номер телефона. Проверьте его.</div>';return}
+    if(!S.ctx.dupOk){var dup=S.list.filter(function(x){return x.id!==id&&(x.phones||[]).some(function(p){return phones.indexOf(p)>=0})});
+      if(dup.length){S.ctx.dupOk=true;$("fWarn").innerHTML='<div class="warnbox">Такой номер уже есть у: '+esc(dup.map(function(x){return x.name}).join(", "))+". Нажмите «Сохранить» ещё раз, если это не ошибка.</div>";return}}
+    var prices=[];$("fPrices").querySelectorAll(".price-row").forEach(function(r){var w=r.querySelector('[name=pw]').value.trim(),p=r.querySelector('[name=pp]').value.trim();if(w||p)prices.push({work:w,price:p})});
+    var o={name:name,spec:$("fSpec").value.trim(),cats:Array.from($("panel").querySelectorAll('[name=cat]:checked')).map(function(x){return x.value}),city:$("fCity").value.trim(),phones:phones,
+      form:$("fForm").value,vat:$("fVat").value,crew:$("fCrew").value.trim(),rating:+$("fRating").dataset.v||0,status:$("fStatus").value,objects:$("fObjects").value.trim(),note:$("fNote").value.trim(),prices:prices,
+      created:(c&&c.created)||Date.now(),updated:Date.now()};
+    $("pSave").disabled=true;
+    try{await putContractor(id||newId(),o);closePanel();toast("Сохранено")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
+  }});
+}
+function putContractor(id,o){var copy=Object.assign({},o);delete copy.id;return mutate(function(d){d.contractors[id]=copy})}
+
+function openImport(){
+  var opts='<option value="">Не указывать</option>'+S.cats.map(function(k){return '<option value="'+esc(k.id)+'"'+(S.cat===k.id?" selected":"")+">"+esc(k.name)+"</option>"}).join("");
+  openPanel("Вставить списком",
+    '<p class="hint">Вставьте контакты как есть, по одному на строку или через запятую. Нужны только имя и номер, например: «Николай кровельщик 8 918 451-67-41».</p>'+
+    '<label class="field"><span>Список</span><textarea class="inp" id="iText" style="min-height:220px"></textarea></label>'+
+    '<label class="field"><span>Вид работ для всех</span><select class="inp" id="iCat">'+opts+"</select></label>"+
+    '<div id="iPrev"></div>',
+    '<span></span><button class="btn primary" id="pSave">Проверить список</button>',
+    {stage:0,items:[],submit:async function(){
+      var ctx=S.ctx;
+      if(ctx.stage===0){
+        var text=$("iText").value,items=[],re=/\+?\d[\d\s()\-]{8,}\d/g,m,last=0,parts=[];
+        while((m=re.exec(text))){parts.push({before:text.slice(last,m.index),phone:m[0]});last=re.lastIndex}
+        var tail=text.slice(last);
+        parts.forEach(function(p,i){var nameB=p.before.replace(/[\n,;]+/g," ").replace(/^[\s\-–—:.]+|[\s\-–—:.]+$/g,"").trim();
+          var d=normPhone(p.phone);
+          if(!nameB&&items.length&&d.length>=10){items[items.length-1].phones.push(d);return}
+          if(!nameB){var after=(parts[i+1]?parts[i+1].before:tail).split(/[\n,;]/)[0].replace(/^[\s\-–—:.]+|[\s\-–—:.]+$/g,"").trim();nameB=after;if(parts[i+1])parts[i+1].before=parts[i+1].before.replace(after,"");}
+          items.push({name:nameB||"Без имени",phones:[d]})});
+        if(!items.length){$("iPrev").innerHTML='<div class="warnbox">Не нашла ни одного номера телефона.</div>';return}
+        var have={};S.list.forEach(function(x){(x.phones||[]).forEach(function(p){have[p]=x.name})});
+        items.forEach(function(it){it.dup=it.phones.map(function(p){return have[p]}).filter(Boolean)[0]||""});
+        ctx.items=items.filter(function(it){return !it.dup});ctx.stage=1;
+        $("iPrev").innerHTML='<div class="field"><span>Будет добавлено: '+ctx.items.length+"</span>"+items.map(function(it){return '<div class="quote"><span>'+esc(it.name)+(it.dup?' <span class="r-sub">уже есть: '+esc(it.dup)+", пропущу</span>":"")+'</span><span class="mono">'+it.phones.map(fmtPhone).join(", ")+"</span></div>"}).join("")+"</div>";
+        $("pSave").textContent="Добавить "+ctx.items.length;$("pSave").disabled=!ctx.items.length;return}
+      $("pSave").disabled=true;var cat=$("iCat").value,n=0;
+      try{await mutate(function(d){ctx.items.forEach(function(it){d.contractors[newId()]={name:it.name,spec:"",cats:cat?[cat]:[],city:"",phones:it.phones,form:"",vat:"",crew:"",rating:0,status:"new",objects:"",note:"",prices:[],created:Date.now(),updated:Date.now()};n++})});
+        closePanel();toast("Добавлено: "+ctx.items.length)}catch(e){toast(failMsg(e));$("pSave").disabled=false}
+    }});
+}
+
+function openRateRow(si,ri){
+  var sh=S.rates.filter(function(x){return x.id===S.sheet})[0]||S.rates[0];if(!sh)return;
+  var sec=sh.sections[si],r=ri>=0?sec.rows[ri]:{work:"",unit:"",p:[]},qs=ri>=0?quotesFor(r.work):[];
+  var body='<label class="field"><span>Работа</span><textarea class="inp" id="rWork" required>'+esc(r.work)+"</textarea></label>"+
+    '<div class="grid2"><label class="field"><span>Ед. изм.</span><input class="inp" id="rUnit" value="'+esc(r.unit||"")+'"></label>'+sh.cols.map(function(c,ci){var v=(r.p||[])[ci];return '<label class="field"><span>'+esc(c)+'</span><input class="inp mono" name="rp" value="'+esc(v==null?"":v)+'"></label>'}).join("")+"</div>"+
+    (ri>=0?'<div class="field"><span>Предложения подрядчиков</span>'+(qs.length?qs.map(function(q){return '<div class="quote"><button type="button" class="linkish" data-act="open" data-id="'+esc(q.c.id)+'">'+esc(q.c.name)+'</button><span class="mono">'+esc(q.p.price)+"</span></div>"}).join(""):'<p class="hint">Пока никто не давал цену на эту работу. Цену подрядчика можно внести в его карточке, в блоке «Расценки подрядчика».</p>')+"</div>":"");
+  openPanel(ri>=0?"Строка расценок":"Новая строка: "+sec.title,body,(ri>=0?'<button type="button" class="btn danger" data-act="del">Удалить</button>':"<span></span>")+'<button class="btn primary" id="pSave">Сохранить</button>',
+   {nofocus:ri>=0,delArmed:false,rate:{si:si,ri:ri},submit:async function(){
+     var w=$("rWork").value.trim();if(!w){$("rWork").focus();return}
+     var nr={work:w,unit:$("rUnit").value.trim(),p:Array.from($("panel").querySelectorAll('[name=rp]')).map(function(x){return x.value.trim()})};
+     var copy=JSON.parse(JSON.stringify(sh));if(ri>=0)copy.sections[si].rows[ri]=nr;else copy.sections[si].rows.push(nr);
+     $("pSave").disabled=true;
+     try{await putSheet(copy);
+       if(ri>=0&&r.work!==w){for(var i=0;i<qs.length;i++){var c=JSON.parse(JSON.stringify(qs[i].c));c.prices.forEach(function(p){if(p.work===r.work)p.work=w});c.updated=Date.now();await putContractor(c.id,c)}}
+       closePanel();toast("Сохранено")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
+   }});
+}
+function putSheet(sh){var id=sh.id,copy=Object.assign({},sh);delete copy.id;return mutate(function(d){d.rates[id]=copy})}
+
+function openAddCat(){
+  openPanel("Новый вид работ",'<label class="field"><span>Название</span><input class="inp" id="cName" required placeholder="Например: Окна и двери"></label><label class="field"><span>Этап стройки</span><select class="inp" id="cStage">'+STAGES.map(function(s){return '<option value="'+s.id+'">'+esc(s.name)+"</option>"}).join("")+"</select></label>",
+   '<span></span><button class="btn primary" id="pSave">Добавить</button>',{submit:async function(){
+     var n=$("cName").value.trim();if(!n){$("cName").focus();return}
+     if(S.cats.some(function(c){return norm(c.name)===norm(n)})){toast("Такой вид работ уже есть");return}
+     var cats=S.cats.concat([{id:"k"+Date.now().toString(36),name:n,stage:$("cStage").value}]);
+     $("pSave").disabled=true;
+     try{await mutate(function(d){d.cats=cats});closePanel();toast("Вид работ добавлен")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
+   }});
+}
+function openPasswd(){
+  openPanel("Сменить логин и пароль",'<p class="hint">Новый вход станет общим для всех и заработает через одну-две минуты. Старый логин и пароль перестанут подходить. Забытый пароль восстановить нельзя, запишите его.</p>'+
+    '<label class="field"><span>Новый логин</span><input class="inp" id="nLogin" autocomplete="username" required></label>'+
+    '<label class="field"><span>Новый пароль (от 8 символов)</span><input class="inp" id="nPass" type="password" autocomplete="new-password" required></label>'+
+    '<label class="field"><span>Пароль ещё раз</span><input class="inp" id="nPass2" type="password" autocomplete="new-password" required></label><div id="fWarn"></div>',
+   '<span></span><button class="btn primary" id="pSave">Сменить</button>',{submit:async function(){
+     var l=$("nLogin").value.trim(),p=$("nPass").value;
+     if(!l||p.length<8){$("fWarn").innerHTML='<div class="warnbox">Укажите логин и пароль не короче 8 символов.</div>';return}
+     if(p!==$("nPass2").value){$("fWarn").innerHTML='<div class="warnbox">Пароли не совпадают.</div>';return}
+     $("pSave").disabled=true;
+     try{var raw=await crypto.subtle.exportKey("raw",S.dek);var v=await makeVault(l,p,raw,{tiv:S.vault.tiv,tct:S.vault.tct,data:S.vault.data,site:S.vault.site});
+       var g=await gh(v.site+"/contents/vault.json?t="+Date.now());if(!g.ok)throw{code:g.status===401||g.status===403?"auth":"net"};var cur=await g.json();
+       var w=await gh(v.site+"/contents/vault.json",{method:"PUT",body:JSON.stringify({message:"Смена логина и пароля",content:btoa(JSON.stringify(v)),sha:cur.sha})});
+       if(!w.ok)throw{code:w.status===401||w.status===403?"auth":"net"};S.vault=v;closePanel();toast("Логин и пароль изменены. Заработают через одну-две минуты")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
+   }});
+}
+async function exportCsv(){
+  var cell=function(v){v=String(v==null?"":v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  var rows=[["Подрядчик","Виды работ","Специализация","Город","Телефоны","Статус","Оценка","Оформление","НДС","Бригада и техника","Наши объекты","Заметка","Расценки"]];
+  S.list.slice().sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")}).forEach(function(c){rows.push([c.name,(c.cats||[]).map(function(x){var k=catById(x);return k?k.name:""}).filter(Boolean).join(", "),c.spec,c.city,(c.phones||[]).map(fmtPhone).join(", "),STATUS[c.status||"new"],c.rating||"",c.form,c.vat,c.crew,c.objects,c.note,(c.prices||[]).map(function(p){return p.work+": "+p.price}).join(" | ")])});
+  var csv="﻿"+rows.map(function(r){return r.map(cell).join(";")}).join("\r\n");
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="reestr-podryadchikov-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},5000);
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click",async function(ev){
+  var menu=$("menuList");
+  var el=ev.target.closest("[data-act]");
+  if(ev.target.closest("[data-stop]")){ev.stopPropagation();return}
+  if(!el){if(!menu.hidden)menu.hidden=true;if(ev.target===$("scrim"))closePanel();return}
+  var a=el.dataset.act;
+  if(a!=="menu")menu.hidden=true;
+  if(a==="menu"){menu.hidden=!menu.hidden}
+  else if(a==="tab"){S.tab=el.dataset.tab;render()}
+  else if(a==="cat"){S.cat=el.dataset.cat;render()}
+  else if(a==="status"){S.status=el.dataset.status;render()}
+  else if(a==="sheet"){S.sheet=el.dataset.id;render()}
+  else if(a==="copy"){ev.stopPropagation();var v=el.dataset.v;try{await navigator.clipboard.writeText(v);toast("Скопировано: "+v)}catch(e){toast("Номер: "+v)}}
+  else if(a==="open"){openContractor(el.dataset.id)}
+  else if(a==="add"){openContractor(null)}
+  else if(a==="import"){openImport()}
+  else if(a==="addcat"){openAddCat()}
+  else if(a==="passwd"){openPasswd()}
+  else if(a==="export"){exportCsv()}
+  else if(a==="genpass"){var al="abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",o="",rv=rnd(20);for(var gi=0;gi<20;gi++)o+=al[rv[gi]%al.length];$("password").value=o.replace(/(.{5})(?=.)/g,"$1-")}
+  else if(a==="logout"){ls("rp.dek",null);location.reload()}
+  else if(a==="close"){closePanel()}
+  else if(a==="rate"){var box=$("fRating"),n=+el.dataset.n;if(+box.dataset.v===n)n=0;box.dataset.v=n;box.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",+b.dataset.n<=n)})}
+  else if(a==="addprice"){$("fPrices").insertAdjacentHTML("beforeend",priceRowHtml({}));var ins=$("fPrices").querySelectorAll('[name=pw]');ins[ins.length-1].focus()}
+  else if(a==="delprice"){el.closest(".price-row").remove()}
+  else if(a==="raterow"){ev.stopPropagation();openRateRow(+el.dataset.s,+el.dataset.r)}
+  else if(a==="del"){
+    if(!S.ctx)return;
+    if(!S.ctx.delArmed){S.ctx.delArmed=true;el.textContent="Точно удалить?";return}
+    el.disabled=true;
+    try{
+      if(S.ctx.rate){var sh=JSON.parse(JSON.stringify(S.rates.filter(function(x){return x.id===S.sheet})[0]||S.rates[0]));sh.sections[S.ctx.rate.si].rows.splice(S.ctx.rate.ri,1);await putSheet(sh)}
+      else if(S.ctx.id){var did=S.ctx.id;await mutate(function(d){delete d.contractors[did]})}
+      closePanel();toast("Удалено")}catch(e){el.disabled=false;toast(failMsg(e))}
+  }
+});
+document.addEventListener("keydown",function(ev){
+  if(ev.key==="Escape"&&!$("scrim").hidden)closePanel();
+  if(ev.key==="Enter"&&ev.target.classList&&ev.target.classList.contains("row"))openContractor(ev.target.dataset.id);
+});
+document.addEventListener("input",function(ev){if(ev.target.id==="q"){S.q=ev.target.value;if(S.tab!=="people")S.tab="people";render()}});
+document.addEventListener("change",function(ev){var t=ev.target;
+  if(t.id==="catSel"){S.cat=t.value;render()}else if(t.id==="citySel"){S.city=t.value;render()}else if(t.id==="sortSel"){S.sort=t.value;render()}});
+
+boot();
+})();
+</script>
+</body>
+</html>
