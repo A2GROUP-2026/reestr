@@ -86,7 +86,7 @@ textarea.inp{resize:vertical;min-height:76px}
 .pill[aria-pressed="true"]{background:var(--soft);border-color:var(--soft);color:var(--accent);font-weight:500}
 
 .list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.row{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1.45fr) minmax(0,.7fr) 132px 64px 158px;gap:var(--pad);padding:0 var(--pad);height:var(--rowh);border-top:1px solid var(--line);align-items:center;cursor:pointer}
+.row{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1.25fr) minmax(0,.65fr) 132px 64px 158px;gap:var(--pad);padding:0 var(--pad);height:var(--rowh);border-top:1px solid var(--line);align-items:center;cursor:pointer}
 .row>*{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .row.head{height:40px;cursor:default;border-top:0;background:var(--raise);font-size:13px;color:var(--muted)}
 .row:not(.head):hover{background:var(--raise)}
@@ -207,6 +207,7 @@ tbody tr.rr:hover{background:var(--raise)}
         <button class="btn" data-act="menu" aria-haspopup="true">Ещё</button>
         <div class="menu-list" id="menuList" hidden>
           <button data-act="addcat">Добавить вид работ</button>
+          <button data-act="importfile">Загрузить подрядчиков из файла</button>
           <button data-act="export" id="exportBtn">Выгрузить в Excel (CSV)</button>
           <button data-act="passwd">Сменить логин и пароль</button>
           <button data-act="logout">Выйти</button>
@@ -222,6 +223,7 @@ tbody tr.rr:hover{background:var(--raise)}
 
 <div id="scrim" class="scrim" hidden><aside class="panel" id="panel" role="dialog" aria-modal="true"></aside></div>
 <div id="toast" class="toast" hidden></div>
+<input type="file" id="importFile" accept=".json,application/json" hidden>
 
 <script>
 (function(){
@@ -235,7 +237,7 @@ var DEFAULT_CATS=[
  {id:"shtuk",name:"Штукатурка и стяжка",stage:"s5"},{id:"otd",name:"Отделка и плитка",stage:"s5"},
  {id:"blag",name:"Благоустройство",stage:"s6"},{id:"bass",name:"Бассейны",stage:"s6"},{id:"bani",name:"Бани",stage:"s6"},
  {id:"nadzor",name:"Технадзор",stage:"s7"},{id:"lab",name:"Лаборатория",stage:"s7"}];
-var STATUS={new:"Не проверен",work:"Работаем",reserve:"Резерв",stop:"Не работать"};
+var STATUS={work:"Работаем",reserve:"Резерв",stop:"Не работать",new:"Не проверен"};
 var FORMS=["","Самозанятый","ИП","ООО","Бригада без оформления"];
 var VATS=["","Без НДС","С НДС"];
 
@@ -440,7 +442,7 @@ function render(){
     '<select class="inp rail-select" id="catSel" aria-label="Вид работ">'+opts+"</select>"+
     '<select class="inp" id="citySel" aria-label="Город"><option value="">Все города</option>'+cities.map(function(c){return '<option'+(S.city===c?" selected":"")+">"+esc(c)+"</option>"}).join("")+"</select>"+
     '<select class="inp" id="sortSel" aria-label="Сортировка"><option value="name"'+(S.sort==="name"?" selected":"")+'>По имени</option><option value="rating"'+(S.sort==="rating"?" selected":"")+'>По оценке</option><option value="new"'+(S.sort==="new"?" selected":"")+">Недавно изменённые</option></select></div>";
-  h+='<div class="seg">'+[["all","Все статусы"],["work","Работаем"],["new","Не проверен"],["reserve","Резерв"],["stop","Не работать"]].map(function(x){return '<button class="pill" data-act="status" data-status="'+x[0]+'" aria-pressed="'+(S.status===x[0])+'">'+x[1]+"</button>"}).join("")+"</div>";
+  h+='<div class="seg">'+[["all","Все статусы"],["work","Работаем"],["reserve","Резерв"],["stop","Не работать"],["new","Не проверен"]].map(function(x){return '<button class="pill" data-act="status" data-status="'+x[0]+'" aria-pressed="'+(S.status===x[0])+'">'+x[1]+"</button>"}).join("")+"</div>";
   if(!arr.length){
     h+='<div class="list"><div class="empty">'+(!S.loaded?"<b>Загружаю подрядчиков…</b>":S.list.length?"<b>Никого не найдено</b>Измените поиск или фильтры.":"<b>В реестре пока пусто</b>Нажмите «Добавить» или «Вставить списком», чтобы внести первых подрядчиков.")+"</div></div>";
   } else {
@@ -501,10 +503,10 @@ function openContractor(id){
     '<label class="field"><span>Как записан</span><input class="inp" id="fName" required value="'+esc(d.name)+'" placeholder="Николай кровельщик"></label>'+
     '<div class="grid2"><label class="field"><span>Телефоны</span><input class="inp mono" id="fPhones" inputmode="tel" value="'+esc((d.phones||[]).map(fmtPhone).join(", "))+'" placeholder="+7 918 000-00-00"></label>'+
     '<label class="field"><span>Город или район</span><input class="inp" id="fCity" list="cityDl" value="'+esc(d.city||"")+'"><datalist id="cityDl">'+cities.map(function(x){return '<option value="'+esc(x)+'">'}).join("")+"</datalist></label></div>"+
-    '<div class="field"><span>Виды работ</span>'+cats+"</div>"+
-    '<label class="field"><span>Специализация</span><input class="inp" id="fSpec" value="'+esc(d.spec||"")+'" placeholder="Например: фальц, автобур, бурение на воду"></label>'+
     '<div class="grid2"><label class="field"><span>Статус</span><select class="inp" id="fStatus">'+Object.keys(STATUS).map(function(k){return '<option value="'+k+'"'+((d.status||"new")===k?" selected":"")+">"+STATUS[k]+"</option>"}).join("")+"</select></label>"+
     '<div class="field"><span>Оценка</span><div class="rate-in" id="fRating" data-v="'+(d.rating||0)+'">'+[1,2,3,4,5].map(function(n){return '<button type="button" data-act="rate" data-n="'+n+'" class="'+(n<=(d.rating||0)?"on":"")+'" aria-label="Оценка '+n+'">'+n+"</button>"}).join("")+"</div></div></div>"+
+    '<div class="field"><span>Виды работ</span>'+cats+"</div>"+
+    '<label class="field"><span>Специализация</span><input class="inp" id="fSpec" value="'+esc(d.spec||"")+'" placeholder="Например: фальц, автобур, бурение на воду"></label>'+
     '<div class="grid2"><label class="field"><span>Оформление</span><select class="inp" id="fForm">'+FORMS.map(function(f){return '<option value="'+f+'"'+((d.form||"")===f?" selected":"")+">"+(f||"Не указано")+"</option>"}).join("")+"</select></label>"+
     '<label class="field"><span>НДС</span><select class="inp" id="fVat">'+VATS.map(function(f){return '<option value="'+f+'"'+((d.vat||"")===f?" selected":"")+">"+(f||"Не указано")+"</option>"}).join("")+"</select></label></div>"+
     '<div class="grid2"><label class="field"><span>Бригада и техника</span><input class="inp" id="fCrew" value="'+esc(d.crew||"")+'" placeholder="4 человека, своя опалубка"></label>'+
@@ -530,6 +532,24 @@ function openContractor(id){
 }
 function putContractor(id,o){var copy=Object.assign({},o);delete copy.id;return mutate(function(d){d.contractors[id]=copy})}
 
+function openFileImport(list){
+  var have={};S.list.forEach(function(x){(x.phones||[]).forEach(function(p){have[p]=x.name})});
+  var str=function(v,n){return String(v==null?"":v).slice(0,n||2000)};
+  var items=list.filter(function(x){return x&&typeof x==="object"}).map(function(x){
+    var phones=(Array.isArray(x.phones)?x.phones:[]).map(normPhone).filter(function(p){return p.length===11});
+    return {name:str(x.name,200).trim()||"Без имени",spec:str(x.spec,300),cats:(Array.isArray(x.cats)?x.cats:[]).filter(catById),city:str(x.city,120),phones:phones,
+      form:FORMS.indexOf(x.form)>=0?x.form:"",vat:VATS.indexOf(x.vat)>=0?x.vat:"",crew:str(x.crew,600),rating:Math.max(0,Math.min(5,+x.rating||0)),
+      status:STATUS[x.status]?x.status:"new",objects:str(x.objects,600),note:str(x.note,2000),
+      prices:(Array.isArray(x.prices)?x.prices:[]).slice(0,80).map(function(q){return {work:str(q&&q.work,400),price:str(q&&q.price,120)}}),
+      dup:phones.map(function(p){return have[p]}).filter(Boolean)[0]||""}});
+  var add=items.filter(function(it){return !it.dup});
+  openPanel("Загрузка из файла",'<p class="hint">Подрядчики с номерами, которые уже есть в реестре, будут пропущены.</p><div class="field"><span>Будет добавлено: '+add.length+" из "+items.length+"</span>"+
+    items.map(function(it){var k=it.cats.map(catById).filter(Boolean);return '<div class="quote"><span>'+esc(it.name)+(it.dup?' <span class="r-sub">уже есть: '+esc(it.dup)+", пропущу</span>":' <span class="r-sub">'+esc(k.map(function(z){return z.name}).join(", "))+(it.prices.length?" · расценок: "+it.prices.length:"")+"</span>")+'</span><span>'+it.phones.map(fmtPhone).join(", ")+"</span></div>"}).join("")+"</div>",
+    '<span></span><button class="btn primary" id="pSave"'+(add.length?"":" disabled")+'>Добавить '+add.length+"</button>",
+    {nofocus:true,submit:async function(){$("pSave").disabled=true;var now=Date.now();
+      try{await mutate(function(d){add.forEach(function(it,i){var o=Object.assign({},it);delete o.dup;o.created=now;o.updated=now+i;d.contractors[newId()]=o})});closePanel();toast("Добавлено: "+add.length)}
+      catch(e){$("pSave").disabled=false;toast(failMsg(e))}}});
+}
 function openImport(){
   var opts='<option value="">Не указывать</option>'+S.cats.map(function(k){return '<option value="'+esc(k.id)+'"'+(S.cat===k.id?" selected":"")+">"+esc(k.name)+"</option>"}).join("");
   openPanel("Вставить списком",
@@ -633,6 +653,7 @@ document.addEventListener("click",async function(ev){
   else if(a==="add"){openContractor(null)}
   else if(a==="import"){openImport()}
   else if(a==="addcat"){openAddCat()}
+  else if(a==="importfile"){var fi=$("importFile");fi.value="";fi.click()}
   else if(a==="passwd"){openPasswd()}
   else if(a==="export"){exportCsv()}
   else if(a==="genpass"){var al="abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",o="",rv=rnd(20);for(var gi=0;gi<20;gi++)o+=al[rv[gi]%al.length];$("password").value=o.replace(/(.{5})(?=.)/g,"$1-")}
@@ -660,6 +681,7 @@ document.addEventListener("keydown",function(ev){
 });
 document.addEventListener("input",function(ev){if(ev.target.id==="q"){S.q=ev.target.value;if(S.tab!=="people")S.tab="people";render()}});
 document.addEventListener("change",function(ev){var t=ev.target;
+  if(t.id==="importFile"&&t.files&&t.files[0]){var rd=new FileReader();rd.onload=function(){try{var j=JSON.parse(rd.result);var l=Array.isArray(j)?j:j.contractors;if(!Array.isArray(l))throw 0;openFileImport(l)}catch(e){toast("Не удалось прочитать файл. Нужен файл .json, подготовленный для реестра")}};rd.readAsText(t.files[0]);return}
   if(t.id==="catSel"){S.cat=t.value;var ck2=catById(S.cat);if(ck2)S.open[ck2.stage]=true;else if(S.cat.indexOf("st:")===0)S.open[S.cat.slice(3)]=true;render()}else if(t.id==="citySel"){S.city=t.value;render()}else if(t.id==="sortSel"){S.sort=t.value;render()}});
 
 boot();
