@@ -14,7 +14,7 @@
   --bg:#F2F4F8; --surface:#FFFFFF; --raise:#F6F8FB; --ink:#1A2233; --muted:#667085; --line:#E2E6ED;
   --accent:#2F5FDB; --accent-ink:#FFFFFF; --soft:#E7EDFC;
   --ok:#14734A; --ok-bg:#DBF2E5; --warn:#8F5B00; --warn-bg:#FBEBC6; --bad:#B42318; --bad-bg:#FBE0DC; --new:#566176; --new-bg:#E8EBF1;
-  --s1:#3B82F6; --s2:#B7791F; --s3:#E0592A; --s4:#7C3AED; --s5:#0E9AA7; --s6:#3F9B2F; --s7:#64748B;
+  --s1:#3B82F6; --s2:#B7791F; --s3:#E0592A; --s4:#7C3AED; --s5:#0E9AA7; --s6:#3F9B2F; --s7:#64748B; --s8:#BE185D;
   --font:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,Consolas,monospace;
   --shadow:0 12px 40px rgba(20,30,55,.16);
@@ -228,11 +228,11 @@ tbody tr.rr:hover{background:var(--raise)}
 <script>
 (function(){
 "use strict";
-var STAGES=[{id:"s1",name:"Подготовка"},{id:"s2",name:"Нулевой цикл"},{id:"s3",name:"Коробка и кровля"},{id:"s4",name:"Инженерные сети"},{id:"s5",name:"Отделка"},{id:"s6",name:"Участок"},{id:"s7",name:"Контроль"}];
+var STAGES=[{id:"s1",name:"Подготовка"},{id:"s2",name:"Нулевой цикл"},{id:"s3",name:"Кладка"},{id:"s8",name:"Кровля"},{id:"s4",name:"Инженерные сети"},{id:"s5",name:"Отделка"},{id:"s6",name:"Участок"},{id:"s7",name:"Контроль"}];
 var DEFAULT_CATS=[
  {id:"geo",name:"Геодезия",stage:"s1"},
  {id:"bur",name:"Буровые и свайные работы",stage:"s2"},{id:"mono",name:"Монолитные работы",stage:"s2"},
- {id:"klad",name:"Кладка: несущие стены и перегородки",stage:"s3"},{id:"fasad",name:"Кладка: фасадная",stage:"s3"},{id:"krov",name:"Кровельные работы",stage:"s3"},
+ {id:"klad",name:"Кладка: несущие стены и перегородки",stage:"s3"},{id:"fasad",name:"Кладка: фасадная",stage:"s3"},{id:"krov",name:"Скатная кровля",stage:"s8"},{id:"krovflat",name:"Плоская кровля",stage:"s8"},
  {id:"el",name:"Электрика",stage:"s4"},{id:"voda",name:"Водоснабжение",stage:"s4"},{id:"kan",name:"Канализация",stage:"s4"},{id:"otop",name:"Отопление",stage:"s4"},{id:"kond",name:"Кондиционирование",stage:"s4"},{id:"vent",name:"Вентиляция",stage:"s4"},{id:"los",name:"ЛОС",stage:"s4"},
  {id:"shtuk",name:"Штукатурка и стяжка",stage:"s5"},{id:"otd",name:"Отделка и плитка",stage:"s5"},
  {id:"blag",name:"Благоустройство",stage:"s6"},{id:"bass",name:"Бассейны",stage:"s6"},{id:"bani",name:"Бани",stage:"s6"},
@@ -282,11 +282,16 @@ function stars(n){n=n||0;if(!n)return "";var s="";for(var i=1;i<=5;i++)s+=i<=n?"
 /* ---------- storage: one encrypted file in a private GitHub repository; every save is a commit ---------- */
 var API="https://api.github.com/repos/";
 function gh(path,opt){opt=opt||{};opt.headers={Authorization:"Bearer "+S.tok,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};opt.cache="no-store";return fetch(API+path,opt)}
+function normCats(list){
+  var out=list.map(function(c){c=Object.assign({},c);if(c.id==="krov"){c.name="Скатная кровля";c.stage="s8"}if(c.id==="krovflat")c.stage="s8";return c});
+  if(!out.some(function(c){return c.id==="krovflat"})){var i=out.findIndex(function(c){return c.id==="krov"});out.splice(i<0?out.length:i+1,0,{id:"krovflat",name:"Плоская кровля",stage:"s8"})}
+  return out;
+}
 function apply(){
   var d=S.data;S.list=Object.keys(d.contractors||{}).map(function(id){return Object.assign({},d.contractors[id],{id:id})});
   S.rates=Object.keys(d.rates||{}).map(function(id){return Object.assign({},d.rates[id],{id:id})}).sort(function(a,b){return (a.order||0)-(b.order||0)});
   if(!S.sheet&&S.rates[0])S.sheet=S.rates[0].id;
-  S.cats=d.cats&&d.cats.length?d.cats:DEFAULT_CATS;S.loaded=true;render();
+  S.cats=normCats(d.cats&&d.cats.length?d.cats:DEFAULT_CATS);S.loaded=true;render();
 }
 async function load(){
   var r=await gh(S.vault.data+"/contents/data.json?t="+Date.now());
