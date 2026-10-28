@@ -247,7 +247,56 @@ tbody tr.rr:hover{background:var(--raise)}
 .rate-in{display:flex;gap:4px}
 .rate-in button{border:1px solid var(--line);background:var(--surface);border-radius:7px;min-width:38px;min-height:38px;font-weight:600;color:var(--muted)}
 .rate-in button.on{background:var(--soft);color:var(--ink);border-color:transparent}
-.price-row{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) auto;gap:8px;align-items:center}
+.price-row{display:grid;grid-template-columns:minmax(0,1fr) 72px 120px 32px;gap:6px;align-items:start;padding:6px 0;border-top:1px solid var(--line)}
+.price-row .pn{grid-column:1/-1;font-size:13.5px;min-height:56px}
+.pw-cell{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding-top:6px}
+.pw-cell .inp{width:100%}
+.pn-tog{border:0;background:none;padding:0;color:var(--accent);font-size:12.5px}
+.cnote{font-size:12px;color:var(--muted);white-space:normal;max-width:260px;margin-left:auto;text-align:right;line-height:1.35;margin-top:2px}
+tr.qnote td{padding-top:0;color:var(--muted);font-size:13px;white-space:pre-line}
+.imp-note{grid-column:2/-1;font-size:12.5px;min-height:40px}
+.mrg{display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.mrg input{margin-top:3px}
+.mrg small{display:block;color:var(--muted);font-size:12px}
+.merge-bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px);z-index:3;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--soft);border-radius:10px;padding:8px 12px;margin-bottom:10px;color:var(--accent);font-weight:500}
+.same-box{display:flex;flex-direction:column}
+.same-head{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:14px 16px;border-bottom:1px solid var(--line)}
+.same-head .hint{max-width:760px}
+.same-g{display:grid;grid-template-columns:120px minmax(0,1fr) auto;gap:12px;align-items:start;padding:12px 16px;border-top:1px solid var(--line)}
+.same-g.done{grid-template-columns:minmax(0,1fr) auto}
+.same-g:first-child{border-top:0}
+.same-on{display:flex;gap:8px;align-items:center;font-size:14px;padding-top:2px}
+.same-items{display:flex;flex-direction:column;gap:6px;min-width:0}
+.same-items small{color:var(--muted);font-size:12.5px}
+.same-it{display:flex;gap:8px;align-items:baseline;font-size:14px}
+.same-it small{color:var(--muted);font-size:12px}
+.same-h3{font-size:16px;font-weight:600;margin:24px 0 10px}
+.price-row .inp{min-height:34px;padding:5px 8px}
+.price-row .btn.ghost{min-height:32px;padding:0;color:var(--muted)}
+.price-head{display:grid;grid-template-columns:minmax(0,1fr) 72px 120px 32px;gap:6px;font-size:12.5px;color:var(--muted);padding-top:4px}
+.price-box{gap:10px}
+.price-box>span b{font-weight:500;color:var(--ink)}
+.imp-box{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--raise)}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.imp-list{max-height:360px;overflow:auto;display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:6px}
+.imp-row{display:grid;grid-template-columns:20px minmax(0,1fr) 64px 110px;gap:6px;align-items:center}
+.imp-row .inp{min-height:32px;padding:4px 7px;font-size:13.5px}
+.imp-row.off .inp{opacity:.5}
+.cmp-tools{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.cmp-tools .inp{flex:1 1 240px;max-width:420px;height:40px}
+.cmp-chips{margin-bottom:12px}
+.cmp-chips .chip{font-size:14px;padding:4px 6px 4px 12px;background:var(--soft);color:var(--accent);border-radius:999px;gap:4px}
+.cmp-chips .chip button{border:0;background:none;color:var(--accent);font-size:16px;line-height:1;padding:0 4px}
+table.cmp td,table.cmp th{white-space:nowrap}
+table.cmp td:first-child{white-space:normal;min-width:260px}
+table.cmp td.best{color:var(--ok);font-weight:600;background:var(--ok-bg)}
+table.ref tr.rr td:first-child{position:relative;padding-left:30px}
+.chev2{position:absolute;left:12px;top:15px;width:6px;height:6px;border-right:1.5px solid var(--muted);border-bottom:1.5px solid var(--muted);transform:rotate(-45deg);transition:transform .12s}
+tr.rr.open .chev2{transform:rotate(45deg)}
+tr.rr.open td{background:var(--soft)}
+tr.qrow td{background:var(--raise);padding-left:30px}
+tr.qrow td.qp{font-weight:500}
+.qn{display:inline-block;min-width:24px;padding:1px 8px;border-radius:999px;background:var(--soft);color:var(--accent);font-weight:500;font-size:13px;text-align:center}
 .pw-text{font-size:14px;line-height:1.35;overflow-wrap:anywhere}
 .picker{border:1px solid var(--line);border-radius:10px;overflow:hidden}
 .picker details+details{border-top:1px solid var(--line)}
@@ -279,7 +328,10 @@ tbody tr.rr:hover{background:var(--raise)}
   .row .r-types{grid-column:1/-1}
   .row .r-city:empty,.row .r-rate:empty{display:none}
   .row .r-phones{grid-column:1/-1;text-align:left}
-  .grid2{grid-template-columns:minmax(0,1fr)}
+  .grid2,.grid3{grid-template-columns:minmax(0,1fr)}
+  .same-g{grid-template-columns:minmax(0,1fr)}
+  .price-row,.price-head{grid-template-columns:minmax(0,1fr) 56px 96px 28px}
+  .imp-row{grid-template-columns:20px minmax(0,1fr) 52px 86px}
 }
 @media (prefers-reduced-motion:no-preference){ .panel{animation:slide .18s ease-out} @keyframes slide{from{transform:translateX(24px)}to{transform:none}} }
 </style>
@@ -331,6 +383,7 @@ tbody tr.rr:hover{background:var(--raise)}
 <div id="scrim" class="scrim" hidden><aside class="panel" id="panel" role="dialog" aria-modal="true"></aside></div>
 <div id="toast" class="toast" hidden></div>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
+<input type="file" id="xlFile" accept=".xlsx,.xls,.csv,.ods" hidden>
 
 <script>
 (function(){
@@ -348,7 +401,7 @@ var STATUS={work:"Работаем",reserve:"Резерв",stop:"Не работ
 var FORMS=["","Самозанятый","ИП","ООО","Бригада без оформления"];
 var VATS=["","Без НДС","С НДС"];
 
-var S={open:{},tok:null,sha:null,data:null,dek:null,vault:null,cats:DEFAULT_CATS,list:[],rates:[],tab:"people",q:"",cat:"all",status:"all",city:"",sort:"name",sheet:null,loaded:false,ctx:null,sup:[],mats:[],prs:[],slog:[],mcats:[],supIx:{},matIx:{},sview:"sup",scat:"all",ssort:"name"};
+var S={aliases:{},notSame:{},rview:"ref",rexp:{},cmp:[],cmpCat:"",cmpQ:"",cmpCommon:false,open:{},tok:null,sha:null,data:null,dek:null,vault:null,cats:DEFAULT_CATS,list:[],rates:[],tab:"people",q:"",cat:"all",status:"all",city:"",sort:"name",sheet:null,loaded:false,ctx:null,sup:[],mats:[],prs:[],slog:[],mcats:[],supIx:{},matIx:{},sview:"sup",scat:"all",ssort:"name"};
 var $=function(id){return document.getElementById(id)};
 var te=new TextEncoder(),td=new TextDecoder();
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -398,7 +451,7 @@ function apply(){
   var d=S.data;S.list=Object.keys(d.contractors||{}).map(function(id){return Object.assign({},d.contractors[id],{id:id})});
   S.rates=Object.keys(d.rates||{}).map(function(id){return Object.assign({},d.rates[id],{id:id})}).sort(function(a,b){return (a.order||0)-(b.order||0)});
   if(!S.sheet&&S.rates[0])S.sheet=S.rates[0].id;
-  S.cats=normCats(d.cats&&d.cats.length?d.cats:DEFAULT_CATS);applySupply();S.loaded=true;render();
+  S.aliases=d.aliases&&typeof d.aliases==="object"?d.aliases:{};S.notSame=d.notSame&&typeof d.notSame==="object"?d.notSame:{};S.cats=normCats(d.cats&&d.cats.length?d.cats:DEFAULT_CATS);applySupply();S.loaded=true;render();
 }
 async function load(){
   var r=await gh(S.vault.data+"/contents/data.json?t="+Date.now());
@@ -575,19 +628,205 @@ function render(){
   }
   $("main").innerHTML=h;
 }
-function quotesFor(work){var out=[];S.list.forEach(function(c){(c.prices||[]).forEach(function(p){if(p.work===work)out.push({c:c,p:p})})});return out}
+/* ---------- prices: helpers ---------- */
+function nkey(w){return norm(w).replace(/[«»"'()\[\],.;:!?\-–—]/g," ").replace(/\s+/g," ").trim()}
+function priceText(p){return (p.price||"")+(p.unit?" · "+p.unit:"")}
+function canonName(w){return S.aliases[nkey(w)]||w}
+function ck(w){return nkey(canonName(w))}
+function quotesFor(work){var k=ck(work),out=[];S.list.forEach(function(c){(c.prices||[]).forEach(function(p){if(ck(p.work)===k)out.push({c:c,p:p})})});return out}
+function firstNum(s){var m=String(s||"").replace(/\s/g,"").match(/\d+(?:[.,]\d+)?/);return m?parseFloat(m[0].replace(",",".")):null}
+function unitKey(p){return norm((p.price||"").replace(/[\d\s.,≈~]|от|ориентир|прим/gi,"")+"|"+(p.unit||"")).replace(/\s/g,"")}
+
+/* ---------- prices: excel ---------- */
+var XLSX_URLS=["https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js","https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js","https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"];
+function loadXLSX(){if(window.XLSX)return Promise.resolve();var i=0;return new Promise(function(ok,no){(function next(){if(i>=XLSX_URLS.length)return no();var sc=document.createElement("script");sc.src=XLSX_URLS[i++];sc.onload=function(){window.XLSX?ok():next()};sc.onerror=function(){sc.remove();next()};document.head.appendChild(sc)})()})}
+var UNIT_RE=/^(шт|штук|м|м2|м²|м3|м³|кв\.?\s*м|куб\.?\s*м|п\.?\s*м|пог\.?\s*м|м\.?\s*п|м\/п|т|тн|тонн|тонна|точка|ед|поддон|компл|комплект|услуга|за услугу|чел\.?\s*д|день|смена|этаж|м\.\s*пог\.?|м\.пог\.?)\.?$/i;
+function guessCols(rows){
+  var n=0;rows.forEach(function(r){n=Math.max(n,r.length)});
+  var g={work:-1,unit:-1,price:-1,note:-1,start:0};
+  for(var i=0;i<Math.min(rows.length,15);i++){var r=rows[i].map(function(x){return norm(x)}),w=-1,u=-1,p=-1;
+    r.forEach(function(x,j){if(g.note<0&&/примеч|состав|входит|описан|коммент/.test(x))g.note=j});
+    r.forEach(function(x,j){if(j===g.note)return;if(w<0&&/наимен|работ|вид работ|перечень/.test(x))w=j;else if(u<0&&/^ед|ед\.|единиц/.test(x))u=j;else if(p<0&&/цен|руб|стоим|р\/|прайс/.test(x)&&!/кол/.test(x))p=j});
+    r.forEach(function(x,j){if(/цена/.test(x)&&j!==w&&j!==u)p=p<0||!/цена/.test(r[p])?j:p});
+    if(w>=0&&p>=0){g={work:w,unit:u,price:p,note:g.note,start:i+1};return g}g.note=-1}
+  var st=[];for(var j=0;j<n;j++)st.push({t:0,num:0,u:0,idx:0});
+  rows.forEach(function(r){r.forEach(function(x,j){x=String(x).trim();if(!x)return;var letters=(x.match(/[а-яёa-z]/gi)||[]).length;
+    if(letters>=4&&x.length>6)st[j].t++;if(UNIT_RE.test(x))st[j].u++;if(/\d/.test(x)&&x.length<30&&!/^\d{1,3}\.?$/.test(x))st[j].num++;if(/^\d{1,3}\.?$/.test(x))st[j].idx++})});
+  var best=function(key,skip){var b=-1;st.forEach(function(s,j){if(skip.indexOf(j)>=0)return;if(s[key]>0&&(b<0||s[key]>st[b][key]))b=j});return b};
+  g.work=best("t",[]);g.unit=best("u",[g.work]);
+  var b=-1;st.forEach(function(s,j){if(j===g.work||j===g.unit)return;if(s.num>0&&(b<0||s.num>st[b].num||(s.num===st[b].num&&j>b)))b=j});g.price=b;
+  return g;
+}
+function rowsFromSheet(rows,g,withSec){
+  var out=[],sec="",cell=function(r,k){return k>=0?String(r[k]==null?"":r[k]).replace(/\s+/g," ").trim():""};
+  for(var i=g.start;i<rows.length;i++){var r=rows[i],w=cell(r,g.work),u=cell(r,g.unit),p=cell(r,g.price),nt=g.note>=0?cell(r,g.note):"";
+    if(!/[а-яёa-z]{2}/i.test(w))continue;
+    var hasP=/\d/.test(p),uOk=!!u&&UNIT_RE.test(u);
+    if(!hasP&&!u){sec=w.replace(/[:\s]+$/,"");continue}
+    if(!hasP&&!uOk){out.push({work:w,unit:"",price:"",why:u,note:nt,on:false});continue}
+    out.push({work:withSec&&sec?sec+": "+w:w,unit:u,price:p,note:nt,on:hasP});
+  }
+  return out;
+}
+/* ---------- prices: pasted text ---------- */
+function parsePriceText(t){
+  var out=[],parent="",lastNum="";
+  t.split(/\r?\n/).forEach(function(line){
+    var s=line.replace(/\t/g," ").replace(/\s+/g," ").trim();if(!s)return;
+    var numbered=/^\d+\s*[.)]\s*/.test(s);s=s.replace(/^\d+\s*[.)]\s*/,"");
+    var re=/(?:от\s*|0т\s*)?\d[\d\s]*(?:[.,]\d+)?/gi,m,cand=null;
+    while((m=re.exec(s))){var start=m.index,end=start+m[0].length,rest=s.slice(end),val=parseFloat(m[0].replace(/[^\d.,]/g,"").replace(",","."));
+      var hasR=/^\s*(р|руб|₽|т\.?\s*р)/i.test(rest);
+      if(rest.length<=30&&(hasR||(val>=10&&!/[а-яё]{5,}/i.test(rest))))cand={start:start}}
+    if(!cand){parent=s.replace(/[\s:.—–-]+$/,"");return}
+    var w=s.slice(0,cand.start).replace(/[\s:.…—–\-]+$/,"").trim(),p=s.slice(cand.start).trim();
+    if(!w){return}
+    if(numbered){parent="";lastNum=w}else if(parent){w=parent+": "+w}else if(lastNum&&/^[а-яё]/i.test(w)){w=lastNum+": "+w}
+    out.push({work:w,unit:"",price:p,on:true});
+  });
+  return out;
+}
+function impPreview(list){
+  S.ctx.imp=list;
+  var n=list.filter(function(x){return x.on}).length;
+  return '<div class="imp-list">'+list.map(function(x,i){return '<div class="imp-row'+(x.on?"":" off")+'"><input type="checkbox" data-act="impchk" data-i="'+i+'"'+(x.on?" checked":"")+' aria-label="Взять эту строку">'+
+    '<input class="inp" data-imp="work" data-i="'+i+'" value="'+esc(x.work)+'"><input class="inp" data-imp="unit" data-i="'+i+'" value="'+esc(x.unit)+'" placeholder="ед."><input class="inp" data-imp="price" data-i="'+i+'" value="'+esc(x.price)+'" placeholder="'+esc(x.why||"цена")+'">'+
+    (x.note?'<textarea class="inp imp-note" data-imp="note" data-i="'+i+'" rows="2">'+esc(x.note)+'</textarea>':"")+'</div>'}).join("")+'</div>'+
+    '<div class="btnrow"><button type="button" class="btn primary small" data-act="impdo">Добавить в прайс: '+n+'</button><button type="button" class="btn small" data-act="impcancel">Отмена</button></div>';
+}
+function sheetUI(){
+  var I=S.ctx.xl,rows=I.rows,n=0;rows.forEach(function(r){n=Math.max(n,r.length)});
+  var colName=function(j){var head=I.g.start>0?String((rows[I.g.start-1]||[])[j]||"").trim():"";var smp="";for(var i=I.g.start;i<rows.length&&!smp;i++){smp=String(rows[i][j]||"").trim()}
+    return String.fromCharCode(65+j)+(head?": "+head:smp?": "+smp:"")};
+  var sel=function(key,label,allowNone){var h='<label class="field"><span>'+label+'</span><select class="inp" data-act="xlcol" data-key="'+key+'">'+(allowNone?'<option value="-1">нет</option>':"");
+    for(var j=0;j<n;j++)h+='<option value="'+j+'"'+(I.g[key]===j?" selected":"")+">"+esc(colName(j).slice(0,40))+"</option>";return h+"</select></label>"};
+  var list=rowsFromSheet(rows,I.g,I.sec);
+  return (I.sheets.length>1?'<label class="field"><span>Лист</span><select class="inp" data-act="xlsheet">'+I.sheets.map(function(s,i){return '<option value="'+i+'"'+(i===I.si?" selected":"")+">"+esc(s)+"</option>"}).join("")+"</select></label>":"")+
+    '<div class="grid2">'+sel("work","Колонка с работой")+sel("price","Колонка с ценой")+sel("unit","Колонка с ед. изм.",true)+sel("note","Колонка «что входит», примечание",true)+'</div>'+
+    '<label class="check"><input type="checkbox" data-act="xlsec"'+(I.sec?" checked":"")+'> Добавлять к работе название раздела (например «Демонтаж: металлочерепица»)</label>'+
+    (list.length?impPreview(list):'<p class="hint">В выбранных колонках не нашлось работ с ценами. Попробуйте выбрать другие колонки или лист.</p>');
+}
+function readExcel(file){
+  var box=$("fImport");box.hidden=false;box.innerHTML='<p class="hint">Читаю файл…</p>';
+  loadXLSX().then(function(){return file.arrayBuffer()}).then(function(buf){
+    var wb=XLSX.read(buf,{type:"array"});
+    S.ctx.xl={wb:wb,sheets:wb.SheetNames,si:0,sec:false};
+    xlPickSheet(0);
+  }).catch(function(){box.innerHTML='<div class="warnbox">Не удалось прочитать файл. Подходят таблицы Excel (.xlsx, .xls) и .csv. Если файл открывается только у вас, сохраните его заново как .xlsx.</div>'});
+}
+function xlPickSheet(i){var I=S.ctx.xl,ws=I.wb.Sheets[I.sheets[i]];I.si=i;
+  I.rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:""}).map(function(r){return r.map(function(x){return String(x)})});
+  I.g=guessCols(I.rows);$("fImport").innerHTML=sheetUI()}
+function openPasteBox(){
+  var box=$("fImport");box.hidden=false;S.ctx.xl=null;
+  box.innerHTML='<p class="hint">Вставьте прайс текстом: по одной работе на строку, цена в конце строки, например «Лицевой кирпич 45р/шт». Текст с фото можно скопировать на телефоне: откройте фото и нажмите «Скопировать текст» (на iPhone — значок текста, на Android — Google Объектив).</p>'+
+    '<textarea class="inp" id="impText" style="min-height:180px"></textarea><div class="btnrow"><button type="button" class="btn small" data-act="impparse">Разобрать</button><button type="button" class="btn small" data-act="impcancel">Отмена</button></div><div id="impRes"></div>';
+  $("impText").focus();
+}
+function priceHead(){var ph=$("panel").querySelector(".price-head");if(ph)ph.hidden=!$("fPrices").children.length;var pc=$("fPriceCount");if(pc)pc.textContent=$("fPrices").children.length}
+function impApply(){
+  var list=(S.ctx.imp||[]).filter(function(x){return x.on&&x.work.trim()});
+  var rows=$("fPrices"),have={};rows.querySelectorAll(".price-row").forEach(function(r){have[nkey(r.querySelector("[name=pw]").value)]=r});
+  var added=0,upd=0;
+  list.forEach(function(x){var k=nkey(x.work),r=have[k];
+    if(r){r.querySelector("[name=pp]").value=x.price;if(x.unit)r.querySelector("[name=pu]").value=x.unit;if(x.note){var na=r.querySelector("[name=pn]");na.value=x.note;na.hidden=false}upd++}
+    else{rows.insertAdjacentHTML("beforeend",priceRowHtml({work:x.work.trim(),unit:x.unit,price:x.price,note:x.note}));have[k]=rows.lastElementChild;added++}});
+  $("fImport").hidden=true;$("fImport").innerHTML="";S.ctx.imp=null;
+  priceHead();
+  $("fWarn").innerHTML='<div class="warnbox">В прайс добавлено: '+added+(upd?", обновлено цен: "+upd:"")+'. Чтобы сохранить, нажмите «Сохранить» внизу.</div>';
+  rows.scrollIntoView({block:"nearest"});
+}
+
+/* ---------- rates view ---------- */
+var STOP={"и":1,"в":1,"на":1,"с":1,"со":1,"из":1,"до":1,"по":1,"за":1,"для":1,"под":1,"от":1,"при":1,"без":1,"работ":1,"работы":1,"устройство":1,"монтаж":0};
+function toks(w){var t=nkey(w).split(" "),out=[],nums=[];t.forEach(function(x){if(!x)return;if(/^\d/.test(x)){nums.push(x.replace(/[^\d.,]/g,""));return}if(STOP[x]===1||x.length<3)return;out.push(x.slice(0,5))});return{t:out,n:nums.sort().join(",")}}
+function simScore(a,b){var A=toks(a),B=toks(b);if(A.n!==B.n)return 0;if(!A.t.length||!B.t.length)return 0;var inter=0;A.t.forEach(function(x){if(B.t.some(function(y){return y===x||(x.length>=3&&y.indexOf(x)===0)||(y.length>=3&&x.indexOf(y)===0)}))inter++});
+  var uni=A.t.length+B.t.length-inter;return inter/uni}
+function allWorks(){var m={};S.rates.forEach(function(sh){sh.sections.forEach(function(sec){sec.rows.forEach(function(r){var k=ck(r.work);if(!m[k])m[k]={name:canonName(r.work),ref:true,n:0}})})});
+  S.list.forEach(function(c){(c.prices||[]).forEach(function(p){var k=ck(p.work);if(!k)return;if(!m[k])m[k]={name:canonName(p.work),ref:false,n:0};m[k].n++})});return m}
+function findSimilar(){
+  var m=allWorks(),keys=Object.keys(m),par={},sc={},hasRef={};keys.forEach(function(k){par[k]=k;hasRef[k]=m[k].ref});
+  var f=function(x){while(par[x]!==x)x=par[x]=par[par[x]];return x};
+  for(var i=0;i<keys.length;i++)for(var j=i+1;j<keys.length;j++){var a=keys[i],b=keys[j];if(m[a].ref&&m[b].ref)continue;if(!m[a].n&&!m[b].n)continue;if(S.notSame[a+"|"+b]||S.notSame[b+"|"+a])continue;
+    var s=simScore(m[a].name,m[b].name);if(s>=0.6){var ra=f(a),rb=f(b);if(ra!==rb){if(hasRef[ra]&&hasRef[rb])continue;par[ra]=rb;hasRef[rb]=hasRef[rb]||hasRef[ra]}sc[a]=Math.max(sc[a]||0,s);sc[b]=Math.max(sc[b]||0,s)}}
+  var g={};keys.forEach(function(k){var r=f(k);(g[r]=g[r]||[]).push(k)});
+  return Object.keys(g).map(function(r){var ks=g[r];if(ks.length<2)return null;ks.sort(function(a,b){return (m[b].ref-m[a].ref)||(m[b].n-m[a].n)||m[a].name.length-m[b].name.length});
+    var min=1;if(ks.length<=5){for(var x=0;x<ks.length;x++)for(var y=x+1;y<ks.length;y++)min=Math.min(min,simScore(m[ks[x]].name,m[ks[y]].name))}else min=0;
+    return{items:ks.map(function(k){return{k:k,name:m[k].name,ref:m[k].ref,n:m[k].n}}),strong:min>=0.75}}).filter(Boolean).sort(function(a,b){return (b.strong-a.strong)}).slice(0,150);
+}
+function sameHtml(){
+  var groups=findSimilar();S.sameGroups=groups;
+  var h='<div class="list same-box">';
+  if(!groups.length)h+='<div class="empty"><b>Похожих работ не нашлось</b>Если всё же видите одну работу в двух строках, объедините их галочками в «Сравнении подрядчиков».</div>';
+  else{h+='<div class="same-head"><p class="hint">Сайт нашёл работы, которые, похоже, означают одно и то же. Уверенные совпадения уже отмечены. Проверьте, снимите галочки там, где это разные работы, выберите главное название и нажмите «Объединить отмеченные». Данные подрядчиков при этом не меняются, объединение можно отменить ниже.</p><button type="button" class="btn primary" data-act="samedo">Объединить отмеченные</button></div>';
+    groups.forEach(function(g,gi){h+='<div class="same-g"><label class="same-on"><input type="checkbox" data-g="'+gi+'"'+(g.strong?" checked":"")+'> Объединить</label><div class="same-items">'+
+      g.items.map(function(it,ii){return '<label class="same-it"><input type="radio" name="sg'+gi+'" value="'+ii+'"'+(ii===0?" checked":"")+'><span>'+esc(it.name)+'</span><small>'+(it.ref?"из справочника":"")+(it.n?(it.ref?", ":"")+"у подрядчиков: "+it.n:"")+'</small></label>'}).join("")+
+      '</div><button type="button" class="btn ghost small" data-act="samediff" data-g="'+gi+'">Это разные работы</button></div>'})}
+  h+="</div>";
+  var al=Object.keys(S.aliases);
+  if(al.length){var by={};al.forEach(function(k){(by[S.aliases[k]]=by[S.aliases[k]]||[]).push(k)});
+    h+='<h3 class="same-h3">Уже объединено</h3><div class="list same-box">'+Object.keys(by).sort(function(a,b){return a.localeCompare(b,"ru")}).map(function(t){return '<div class="same-g done"><div class="same-items"><b>'+esc(t)+'</b><small>'+esc(by[t].join(" · "))+'</small></div><button type="button" class="btn ghost small" data-act="unmerge" data-t="'+esc(t)+'">Разъединить</button></div>'}).join("")+"</div>"}
+  return h;
+}
+function mergeNames(groups){
+  return mutate(function(d){var a=d.aliases&&typeof d.aliases==="object"?d.aliases:{};
+    groups.forEach(function(g){var main=g.main,mk=nkey(main);delete a[mk];
+      g.others.forEach(function(o){var ok=nkey(o);if(ok===mk)return;a[ok]=main;Object.keys(a).forEach(function(k){if(nkey(a[k])===ok)a[k]=main})})});
+    d.aliases=a});
+}
+function openMergeDialog(ks){
+  var names=[];ks.forEach(function(k){var r=S.cmpMap[k];if(!r)return;Object.keys(r.names).forEach(function(n){if(names.every(function(x){return nkey(x)!==nkey(n)}))names.push(n)});if(names.every(function(x){return nkey(x)!==nkey(r.work)}))names.push(r.work)});
+  names.sort(function(a,b){var ra=S.rates.some(function(sh){return sh.sections.some(function(sc){return sc.rows.some(function(x){return nkey(x.work)===nkey(a)})})}),rb=S.rates.some(function(sh){return sh.sections.some(function(sc){return sc.rows.some(function(x){return nkey(x.work)===nkey(b)})})});return (rb-ra)||a.length-b.length});
+  openPanel("Объединить работы",'<p class="hint">Эти названия будут считаться одной работой во всех сравнениях и в справочнике. Выберите, какое название показывать. Прайсы подрядчиков не меняются, объединение можно отменить во вкладке «Похожие работы».</p><div class="field">'+
+    names.map(function(n,i){return '<label class="same-it"><input type="radio" name="mmain" value="'+i+'"'+(i===0?" checked":"")+'><span>'+esc(n)+"</span></label>"}).join("")+"</div>",
+    '<span></span><button type="button" class="btn primary" data-act="mergedo">Объединить</button>',{nofocus:true,mnames:names});
+}
 function renderRates(){
+  var h='<div class="tools"><h2>Расценки<small>'+(S.rview==="cmp"?"Выберите подрядчиков и сравните их цены по каждой работе":S.rview==="same"?"Одна и та же работа, записанная по-разному, объединяется в одну строку":"Нажмите на работу, чтобы увидеть, кто и за сколько её делает")+'</small></h2></div>';
+  h+='<div class="seg"><button class="pill" data-act="rview" data-v="ref" aria-pressed="'+(S.rview==="ref")+'">Справочник по работам</button><button class="pill" data-act="rview" data-v="cmp" aria-pressed="'+(S.rview==="cmp")+'">Сравнение подрядчиков</button><button class="pill" data-act="rview" data-v="same" aria-pressed="'+(S.rview==="same")+'">Похожие работы</button></div>';
+  $("main").innerHTML=h+(S.rview==="cmp"?cmpHtml():S.rview==="same"?sameHtml():refHtml());
+}
+function refHtml(){
   var sh=S.rates.filter(function(x){return x.id===S.sheet})[0]||S.rates[0];
-  var h='<div class="tools"><h2>Расценки<small>Справочные цены и предложения подрядчиков по каждой работе</small></h2></div>';
-  if(!sh){$("main").innerHTML=h+'<div class="list"><div class="empty"><b>Расценок пока нет</b>Они появятся здесь после загрузки прайсов.</div></div>';return}
-  h+='<div class="seg">'+S.rates.map(function(x){return '<button class="pill" data-act="sheet" data-id="'+esc(x.id)+'" aria-pressed="'+(x.id===sh.id)+'">'+esc(x.title)+"</button>"}).join("")+"</div>";
-  h+='<div class="tbl-wrap"><table><thead><tr><th>Работа</th><th>Ед.</th>'+sh.cols.map(function(c){return '<th class="num">'+esc(c)+"</th>"}).join("")+'<th class="num">Подрядчики</th></tr></thead><tbody>';
+  if(!sh)return '<div class="list"><div class="empty"><b>Справочника расценок пока нет</b></div></div>';
+  var h='<div class="seg">'+S.rates.map(function(x){return '<button class="pill" data-act="sheet" data-id="'+esc(x.id)+'" aria-pressed="'+(x.id===sh.id)+'">'+esc(x.title)+"</button>"}).join("")+"</div>";
+  var cols=3+sh.cols.length+1;
+  h+='<div class="tbl-wrap"><table class="ref"><thead><tr><th>Работа</th><th>Ед.</th>'+sh.cols.map(function(c){return '<th class="num">'+esc(c)+"</th>"}).join("")+'<th class="num">Подрядчики</th><th></th></tr></thead><tbody>';
   sh.sections.forEach(function(sec,si){
-    h+='<tr class="sec"><td colspan="'+(3+sh.cols.length)+'">'+esc(sec.title)+'<button class="btn small" data-act="raterow" data-s="'+si+'" data-r="-1">Добавить строку</button></td></tr>';
-    sec.rows.forEach(function(r,ri){var n=quotesFor(r.work).length;
-      h+='<tr class="rr" data-act="raterow" data-s="'+si+'" data-r="'+ri+'"><td>'+esc(r.work)+"</td><td>"+esc(r.unit||"")+"</td>"+sh.cols.map(function(c,ci){var v=(r.p||[])[ci];return '<td class="num mono">'+(v===""||v==null?"—":esc(v))+"</td>"}).join("")+'<td class="num">'+(n?'<span class="cnt">'+n+"</span>":"—")+"</td></tr>"})});
-  h+="</tbody></table></div>";
-  $("main").innerHTML=h;
+    h+='<tr class="sec"><td colspan="'+cols+'">'+esc(sec.title)+'<button class="btn small" data-act="raterow" data-s="'+si+'" data-r="-1">Добавить строку</button></td></tr>';
+    sec.rows.forEach(function(r,ri){var qs=quotesFor(r.work),k=sh.id+":"+si+":"+ri,open=!!S.rexp[k];
+      h+='<tr class="rr'+(open?" open":"")+'" data-act="rexp" data-k="'+esc(k)+'"><td><span class="chev2"></span>'+esc(r.work)+"</td><td>"+esc(r.unit||"")+"</td>"+sh.cols.map(function(c,ci){var v=(r.p||[])[ci];return '<td class="num">'+(v===""||v==null?"—":esc(v))+"</td>"}).join("")+
+        '<td class="num">'+(qs.length?'<span class="qn">'+qs.length+"</span>":'<span class="r-sub">—</span>')+'</td><td class="num"><button type="button" class="btn ghost small" data-act="raterow" data-s="'+si+'" data-r="'+ri+'">Изменить</button></td></tr>';
+      if(open){
+        if(!qs.length)h+='<tr class="qrow"><td colspan="'+cols+'"><span class="r-sub">Никто из подрядчиков пока не указал цену на эту работу. Цену добавляют в карточке подрядчика, в блоке «Прайс».</span></td></tr>';
+        qs.slice().sort(function(a,b){var x=firstNum(a.p.price),y=firstNum(b.p.price);return (x==null?1e12:x)-(y==null?1e12:y)}).forEach(function(q){var stt=q.c.status||"new";
+          h+='<tr class="qrow"><td colspan="2"><button type="button" class="linkish" data-act="open" data-id="'+esc(q.c.id)+'">'+esc(q.c.name)+'</button> <span class="st '+esc(stt)+'">'+STATUS[stt]+'</span></td><td colspan="'+(cols-2)+'" class="num qp">'+esc(priceText(q.p))+"</td></tr>"+(q.p.note?'<tr class="qrow qnote"><td colspan="'+cols+'">'+esc(q.p.note)+"</td></tr>":"")});
+      }})});
+  return h+"</tbody></table></div>";
+}
+function cmpHtml(){
+  var sel=S.cmp.map(function(id){return S.list.filter(function(c){return c.id===id})[0]}).filter(Boolean);
+  var cand=S.list.filter(function(c){return (c.prices||[]).length&&S.cmp.indexOf(c.id)<0&&(!S.cmpCat||(c.cats||[]).indexOf(S.cmpCat)>=0)}).sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")});
+  var cats=S.cats.filter(function(k){return S.list.some(function(c){return (c.prices||[]).length&&(c.cats||[]).indexOf(k.id)>=0})});
+  var h='<div class="cmp-tools"><select class="inp" id="cmpCat" aria-label="Вид работ"><option value="">Все виды работ</option>'+cats.map(function(k){return '<option value="'+esc(k.id)+'"'+(S.cmpCat===k.id?" selected":"")+">"+esc(k.name)+"</option>"}).join("")+'</select>'+
+    '<select class="inp" id="cmpAdd" aria-label="Добавить подрядчика"><option value="">+ Добавить подрядчика в сравнение</option>'+cand.map(function(c){return '<option value="'+esc(c.id)+'">'+esc(c.name)+" ("+c.prices.length+")</option>"}).join("")+"</select></div>";
+  if(!S.list.some(function(c){return (c.prices||[]).length}))return h+'<div class="list"><div class="empty"><b>Прайсов пока нет</b>Загрузите прайс в карточке подрядчика, и его можно будет сравнивать здесь.</div></div>';
+  if(!sel.length)return h+'<div class="list"><div class="empty"><b>Выберите подрядчиков</b>Добавьте двух-трёх человек из списка выше, и их цены встанут рядом по каждой работе.</div></div>';
+  h+='<div class="chips cmp-chips">'+sel.map(function(c){return '<span class="chip">'+esc(c.name)+'<button type="button" data-act="cmpdel" data-id="'+esc(c.id)+'" aria-label="Убрать из сравнения">×</button></span>'}).join("")+"</div>";
+  var map={},order=[];sel.forEach(function(c,ci){(c.prices||[]).forEach(function(p){var k=ck(p.work);if(!k)return;if(!map[k]){map[k]={work:canonName(p.work),cells:[],names:{}};order.push(k)}map[k].names[p.work]=1;if(!map[k].cells[ci])map[k].cells[ci]=p})});
+  S.cmpMap=map;
+  var q=nkey(S.cmpQ||"");
+  var keys=order.filter(function(k){var r=map[k];if(q&&r.work&&nkey(r.work).indexOf(q)<0)return false;if(S.cmpCommon&&r.cells.filter(Boolean).length<2)return false;return true}).sort(function(a,b){return map[a].work.localeCompare(map[b].work,"ru")});
+  h+='<div class="cmp-tools"><input class="inp" id="cmpQ" type="search" placeholder="Найти работу, например «перемычки»" value="'+esc(S.cmpQ||"")+'"><label class="check"><input type="checkbox" id="cmpCommon"'+(S.cmpCommon?" checked":"")+'> Только работы, которые есть хотя бы у двух</label></div>';
+  h+='<div class="merge-bar" id="mergeBar" hidden><span id="mergeCnt"></span><button type="button" class="btn small primary" data-act="mergesel">Объединить в одну работу</button><button type="button" class="btn small" data-act="mergeclear">Снять выбор</button></div>';
+  h+='<div class="tbl-wrap"><table class="cmp"><thead><tr><th>Работа</th>'+sel.map(function(c){return '<th class="num"><button type="button" class="linkish" data-act="open" data-id="'+esc(c.id)+'">'+esc(c.name)+"</button></th>"}).join("")+"</tr></thead><tbody>";
+  if(!keys.length)h+='<tr><td colspan="'+(sel.length+1)+'"><span class="r-sub">Ничего не найдено.</span></td></tr>';
+  keys.forEach(function(k){var r=map[k],nums=[],uk={};r.cells.forEach(function(p,i){if(!p)return;var v=firstNum(p.price);if(v!=null){nums.push([i,v]);uk[unitKey(p)]=1}});
+    var best=-1;if(nums.length>1&&Object.keys(uk).length===1){var mn=Math.min.apply(null,nums.map(function(x){return x[1]}));nums.forEach(function(x){if(x[1]===mn)best=x[0]})}
+    var vars=Object.keys(r.names).filter(function(n){return nkey(n)!==nkey(r.work)});
+    h+='<tr><td><label class="mrg"><input type="checkbox" data-act="mergechk" data-k="'+esc(k)+'"><span>'+esc(r.work)+(vars.length?'<small title="'+esc(vars.join("\n"))+'">объединено: '+(vars.length+1)+" варианта</small>":"")+"</span></label></td>"+
+      sel.map(function(c,i){var p=r.cells[i];return '<td class="num'+(i===best?" best":"")+'">'+(p?esc(priceText(p))+(p.note?'<div class="cnote">'+esc(p.note)+"</div>":""):'<span class="r-sub">—</span>')+"</td>"}).join("")+"</tr>"});
+  return h+"</tbody></table></div><p class=\"hint\" style=\"margin-top:10px\">Зелёным отмечена самая низкая цена в строке, если единицы измерения у всех одинаковые. Если одна работа записана у подрядчиков по-разному, отметьте строки галочками и нажмите «Объединить», или откройте «Похожие работы».</p>";
 }
 
 /* ---------- panel ---------- */
@@ -598,7 +837,9 @@ function openPanel(title,body,foot,ctx){
 }
 function closePanel(){$("scrim").hidden=true;$("panel").innerHTML="";S.ctx=null}
 
-function priceRowHtml(p){var w=p.work||"";return '<div class="price-row">'+(w?'<div class="pw-text">'+esc(w)+'</div><input type="hidden" name="pw" value="'+esc(w)+'">':'<input class="inp" name="pw" placeholder="Название работы">')+'<input class="inp" name="pp" placeholder="Цена" value="'+esc(p.price||"")+'"><button type="button" class="btn ghost" data-act="delprice" aria-label="Удалить расценку">×</button></div>'}
+function priceRowHtml(p){var w=p.work||"",n=p.note||"";return '<div class="price-row"><div class="pw-cell">'+(w?'<div class="pw-text">'+esc(w)+'</div><input type="hidden" name="pw" value="'+esc(w)+'">':'<input class="inp" name="pw" placeholder="Название работы">')+
+  '<button type="button" class="pn-tog" data-act="pnote">'+(n?"Что входит ▾":"+ что входит")+'</button></div><input class="inp" name="pu" placeholder="ед." value="'+esc(p.unit||"")+'"><input class="inp" name="pp" placeholder="Цена" value="'+esc(p.price||"")+'"><button type="button" class="btn ghost" data-act="delprice" aria-label="Удалить расценку">×</button>'+
+  '<textarea class="inp pn" name="pn" rows="2" placeholder="Что входит в работу, как работает, условия"'+(n?"":" hidden")+'>'+esc(n)+'</textarea></div>'}
 function pickerHtml(){
   var have={};$("fPrices").querySelectorAll("[name=pw]").forEach(function(x){have[x.value]=1});
   if(!S.rates.length)return '<p class="hint">Разделов с расценками пока нет. Добавьте работу вручную кнопкой «Своя работа».</p>';
@@ -627,7 +868,11 @@ function openContractor(id){
     '<div class="grid2"><label class="field"><span>Бригада и техника</span><input class="inp" id="fCrew" value="'+esc(d.crew||"")+'" placeholder="4 человека, своя опалубка"></label>'+
     '<label class="field"><span>Наши объекты</span><input class="inp" id="fObjects" value="'+esc(d.objects||"")+'" placeholder="Где уже работал у нас"></label></div>'+
     '<label class="field"><span>Заметка</span><textarea class="inp" id="fNote" placeholder="Качество, сроки, как с ним работать">'+esc(d.note||"")+"</textarea></label>"+
-    '<div class="field"><span>Расценки подрядчика</span><div id="fPrices" style="display:flex;flex-direction:column;gap:8px">'+(d.prices||[]).map(priceRowHtml).join("")+'</div><div class="btnrow"><button type="button" class="btn small" data-act="pickprice">Выбрать из разделов</button><button type="button" class="btn small" data-act="addprice">Своя работа</button></div><div id="fPicker" hidden></div></div>'+
+    '<div class="field price-box"><span>Прайс подрядчика · <b id="fPriceCount">'+(d.prices||[]).length+'</b></span>'+
+      '<div class="btnrow"><button type="button" class="btn small primary" data-act="xlpick">Загрузить из Excel</button><button type="button" class="btn small" data-act="pastebox">Вставить текстом</button><button type="button" class="btn small" data-act="pickprice">Выбрать из разделов</button><button type="button" class="btn small" data-act="addprice">Своя работа</button>'+(c&&(d.prices||[]).length?'<button type="button" class="btn small" data-act="cmpthis" data-id="'+esc(c.id)+'">Сравнить с другими</button>':"")+'</div>'+
+      '<div id="fImport" class="imp-box" hidden></div><div id="fPicker" hidden></div>'+
+      ((d.prices||[]).length?"":'<p class="hint">Прайса пока нет. Загрузите файл Excel, который прислал подрядчик, или вставьте прайс текстом.</p>')+
+      '<div class="price-head" '+((d.prices||[]).length?"":"hidden")+'><span>Работа</span><span>Ед.</span><span>Цена</span><span></span></div><div id="fPrices" style="display:flex;flex-direction:column;gap:6px">'+(d.prices||[]).map(priceRowHtml).join("")+'</div></div>'+
     '<div id="fWarn"></div>';
   var foot=(c?'<button type="button" class="btn danger" data-act="del">Удалить</button>':"<span></span>")+'<button class="btn primary" id="pSave">Сохранить</button>';
   openPanel(c?c.name:"Новый подрядчик",body,foot,{nofocus:!!c,dupOk:false,delArmed:false,id:id,submit:async function(){
@@ -637,7 +882,7 @@ function openContractor(id){
     if(raw&&!phones.length){$("fWarn").innerHTML='<div class="warnbox">Не удалось разобрать номер телефона. Проверьте его.</div>';return}
     if(!S.ctx.dupOk){var dup=S.list.filter(function(x){return x.id!==id&&(x.phones||[]).some(function(p){return phones.indexOf(p)>=0})});
       if(dup.length){S.ctx.dupOk=true;$("fWarn").innerHTML='<div class="warnbox">Такой номер уже есть у: '+esc(dup.map(function(x){return x.name}).join(", "))+". Нажмите «Сохранить» ещё раз, если это не ошибка.</div>";return}}
-    var prices=[];$("fPrices").querySelectorAll(".price-row").forEach(function(r){var w=r.querySelector('[name=pw]').value.trim(),p=r.querySelector('[name=pp]').value.trim();if(w||p)prices.push({work:w,price:p})});
+    var prices=[];$("fPrices").querySelectorAll(".price-row").forEach(function(r){var w=r.querySelector('[name=pw]').value.trim(),p=r.querySelector('[name=pp]').value.trim(),u=r.querySelector('[name=pu]').value.trim(),nn=r.querySelector('[name=pn]').value.trim();if(w||p){var o={work:w,price:p};if(u)o.unit=u;if(nn)o.note=nn;prices.push(o)}});
     var o={name:name,spec:$("fSpec").value.trim(),cats:Array.from($("panel").querySelectorAll('[name=cat]:checked')).map(function(x){return x.value}),city:$("fCity").value.trim(),phones:phones,
       form:$("fForm").value,vat:$("fVat").value,crew:$("fCrew").value.trim(),rating:+$("fRating").dataset.v||0,status:$("fStatus").value,objects:$("fObjects").value.trim(),note:$("fNote").value.trim(),prices:prices,
       created:(c&&c.created)||Date.now(),updated:Date.now()};
@@ -648,7 +893,7 @@ function openContractor(id){
 function putContractor(id,o){var copy=Object.assign({},o);delete copy.id;return mutate(function(d){d.contractors[id]=copy})}
 
 function openFileImport(list){
-  var have={};S.list.forEach(function(x){(x.phones||[]).forEach(function(p){have[p]=x.name})});
+  var have={},haveId={};S.list.forEach(function(x){(x.phones||[]).forEach(function(p){have[p]=x.name;haveId[p]=x.id})});
   var str=function(v,n){return String(v==null?"":v).slice(0,n||2000)};
   var items=list.filter(function(x){return x&&typeof x==="object"}).map(function(x){
     var phones=(Array.isArray(x.phones)?x.phones:[]).map(normPhone).filter(function(p){return p.length===11});
@@ -656,13 +901,17 @@ function openFileImport(list){
       form:FORMS.indexOf(x.form)>=0?x.form:"",vat:VATS.indexOf(x.vat)>=0?x.vat:"",crew:str(x.crew,600),rating:Math.max(0,Math.min(5,+x.rating||0)),
       status:STATUS[x.status]?x.status:"new",objects:str(x.objects,600),note:str(x.note,2000),
       prices:(Array.isArray(x.prices)?x.prices:[]).slice(0,80).map(function(q){return {work:str(q&&q.work,400),price:str(q&&q.price,120)}}),
-      dup:phones.map(function(p){return have[p]}).filter(Boolean)[0]||""}});
-  var add=items.filter(function(it){return !it.dup});
-  openPanel("Загрузка из файла",'<p class="hint">Подрядчики с номерами, которые уже есть в реестре, будут пропущены.</p><div class="field"><span>Будет добавлено: '+add.length+" из "+items.length+"</span>"+
-    items.map(function(it){var k=it.cats.map(catById).filter(Boolean);return '<div class="quote"><span>'+esc(it.name)+(it.dup?' <span class="r-sub">уже есть: '+esc(it.dup)+", пропущу</span>":' <span class="r-sub">'+esc(k.map(function(z){return z.name}).join(", "))+(it.prices.length?" · расценок: "+it.prices.length:"")+"</span>")+'</span><span>'+it.phones.map(fmtPhone).join(", ")+"</span></div>"}).join("")+"</div>",
-    '<span></span><button class="btn primary" id="pSave"'+(add.length?"":" disabled")+'>Добавить '+add.length+"</button>",
+      dup:phones.map(function(p){return have[p]}).filter(Boolean)[0]||"",dupId:phones.map(function(p){return haveId[p]}).filter(Boolean)[0]||""}});
+  var add=items.filter(function(it){return !it.dup}),merge=items.filter(function(it){return it.dup});
+  openPanel("Загрузка из файла",'<p class="hint">Если номер уже есть в реестре, новый подрядчик не создаётся: к существующей карточке добавятся виды работ, расценки и заметка.</p><div class="field"><span>Новых: '+add.length+(merge.length?", дополнить: "+merge.length:"")+"</span>"+
+    items.map(function(it){var k=it.cats.map(catById).filter(Boolean);return '<div class="quote"><span>'+esc(it.name)+(it.dup?' <span class="r-sub">номер уже есть у «'+esc(it.dup)+'», дополню его карточку'+(it.prices.length?" (расценок: "+it.prices.length+")":"")+"</span>":' <span class="r-sub">'+esc(k.map(function(z){return z.name}).join(", "))+(it.prices.length?" · расценок: "+it.prices.length:"")+"</span>")+'</span><span>'+it.phones.map(fmtPhone).join(", ")+"</span></div>"}).join("")+"</div>",
+    '<span></span><button class="btn primary" id="pSave"'+(add.length+merge.length?"":" disabled")+'>'+(merge.length?"Сохранить":"Добавить "+add.length)+"</button>",
     {nofocus:true,submit:async function(){$("pSave").disabled=true;var now=Date.now();
-      try{await mutate(function(d){add.forEach(function(it,i){var o=Object.assign({},it);delete o.dup;o.created=now;o.updated=now+i;d.contractors[newId()]=o})});closePanel();toast("Добавлено: "+add.length)}
+      try{await mutate(function(d){add.forEach(function(it,i){var o=Object.assign({},it);delete o.dup;delete o.dupId;o.created=now;o.updated=now+i;d.contractors[newId()]=o});
+        merge.forEach(function(it){var ex=d.contractors[it.dupId];if(!ex)return;ex.cats=ex.cats||[];it.cats.forEach(function(k){if(ex.cats.indexOf(k)<0)ex.cats.push(k)});
+          ex.prices=ex.prices||[];var w={};ex.prices.forEach(function(q){w[q.work]=1});it.prices.forEach(function(q){if(!w[q.work])ex.prices.push(q)});
+          if(it.note&&String(ex.note||"").indexOf(it.note)<0)ex.note=(ex.note?ex.note+"\n":"")+it.note;if(!ex.spec&&it.spec)ex.spec=it.spec;if(!ex.city&&it.city)ex.city=it.city;ex.updated=now})});
+        closePanel();toast("Добавлено: "+add.length+(merge.length?", дополнено: "+merge.length:""))}
       catch(e){$("pSave").disabled=false;toast(failMsg(e))}}});
 }
 function openImport(){
@@ -701,7 +950,7 @@ function openRateRow(si,ri){
   var sec=sh.sections[si],r=ri>=0?sec.rows[ri]:{work:"",unit:"",p:[]},qs=ri>=0?quotesFor(r.work):[];
   var body='<label class="field"><span>Работа</span><textarea class="inp" id="rWork" required>'+esc(r.work)+"</textarea></label>"+
     '<div class="grid2"><label class="field"><span>Ед. изм.</span><input class="inp" id="rUnit" value="'+esc(r.unit||"")+'"></label>'+sh.cols.map(function(c,ci){var v=(r.p||[])[ci];return '<label class="field"><span>'+esc(c)+'</span><input class="inp mono" name="rp" value="'+esc(v==null?"":v)+'"></label>'}).join("")+"</div>"+
-    (ri>=0?'<div class="field"><span>Предложения подрядчиков</span>'+(qs.length?qs.map(function(q){return '<div class="quote"><button type="button" class="linkish" data-act="open" data-id="'+esc(q.c.id)+'">'+esc(q.c.name)+'</button><span class="mono">'+esc(q.p.price)+"</span></div>"}).join(""):'<p class="hint">Пока никто не давал цену на эту работу. Цену подрядчика можно внести в его карточке, в блоке «Расценки подрядчика».</p>')+"</div>":"");
+    (ri>=0?'<div class="field"><span>Предложения подрядчиков</span>'+(qs.length?qs.map(function(q){return '<div class="quote"><button type="button" class="linkish" data-act="open" data-id="'+esc(q.c.id)+'">'+esc(q.c.name)+'</button><span>'+esc(priceText(q.p))+"</span></div>"}).join(""):'<p class="hint">Пока никто не давал цену на эту работу. Цену подрядчика можно внести в его карточке, в блоке «Расценки подрядчика».</p>')+"</div>":"");
   openPanel(ri>=0?"Строка расценок":"Новая строка: "+sec.title,body,(ri>=0?'<button type="button" class="btn danger" data-act="del">Удалить</button>':"<span></span>")+'<button class="btn primary" id="pSave">Сохранить</button>',
    {nofocus:ri>=0,delArmed:false,rate:{si:si,ri:ri},submit:async function(){
      var w=$("rWork").value.trim();if(!w){$("rWork").focus();return}
@@ -744,7 +993,7 @@ function openPasswd(){
 async function exportCsv(){
   var cell=function(v){v=String(v==null?"":v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
   var rows=[["Подрядчик","Виды работ","Специализация","Город","Телефоны","Статус","Оценка","Оформление","НДС","Бригада и техника","Наши объекты","Заметка","Расценки"]];
-  S.list.slice().sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")}).forEach(function(c){rows.push([c.name,(c.cats||[]).map(function(x){var k=catById(x);return k?k.name:""}).filter(Boolean).join(", "),c.spec,c.city,(c.phones||[]).map(fmtPhone).join(", "),STATUS[c.status||"new"],c.rating||"",c.form,c.vat,c.crew,c.objects,c.note,(c.prices||[]).map(function(p){return p.work+": "+p.price}).join(" | ")])});
+  S.list.slice().sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")}).forEach(function(c){rows.push([c.name,(c.cats||[]).map(function(x){var k=catById(x);return k?k.name:""}).filter(Boolean).join(", "),c.spec,c.city,(c.phones||[]).map(fmtPhone).join(", "),STATUS[c.status||"new"],c.rating||"",c.form,c.vat,c.crew,c.objects,c.note,(c.prices||[]).map(function(p){return p.work+": "+priceText(p)}).join(" | ")])});
   var csv="﻿"+rows.map(function(r){return r.map(cell).join(";")}).join("\r\n");
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="reestr-podryadchikov-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},5000);
 }
@@ -1068,21 +1317,46 @@ document.addEventListener("click",async function(ev){
   else if(a==="logout"){ls("rp.dek",null);location.reload()}
   else if(a==="close"){closePanel()}
   else if(a==="rate"){var box=$("fRating"),n=+el.dataset.n;if(+box.dataset.v===n)n=0;box.dataset.v=n;box.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",+b.dataset.n<=n)})}
-  else if(a==="delprice"){el.closest(".price-row").remove();if(!$("fPicker").hidden)$("fPicker").innerHTML=pickerHtml()}
+  else if(a==="delprice"){el.closest(".price-row").remove();priceHead();if(!$("fPicker").hidden)$("fPicker").innerHTML=pickerHtml()}
   else if(a==="pickprice"){var pk=$("fPicker");pk.hidden=!pk.hidden;if(!pk.hidden){pk.innerHTML=pickerHtml();pk.scrollIntoView({block:"nearest"})}}
-  else if(a==="pickwork"){$("fPrices").insertAdjacentHTML("beforeend",priceRowHtml({work:el.dataset.w}));el.disabled=true;var pi=$("fPrices").querySelectorAll('[name=pp]');pi[pi.length-1].focus()}
+  else if(a==="pickwork"){$("fPrices").insertAdjacentHTML("beforeend",priceRowHtml({work:el.dataset.w}));el.disabled=true;priceHead();var pi=$("fPrices").querySelectorAll('[name=pp]');pi[pi.length-1].focus()}
   else if(a==="scat"){S.scat=el.dataset.cat;render()}
   else if(a==="sview"){S.sview=el.dataset.v;S.scat="all";render()}
   else if(a==="sopen"){ev.stopPropagation();openSupplier(el.dataset.id)}
   else if(a==="mopen"){openMaterial(el.dataset.id)}
   else if(a==="addsup"){openSupplier(null)}
   else if(a==="addmat"){openMaterial(null,el.dataset.cat)}
-  else if(a==="addprice"){if(el.closest("#panel")&&!el.closest("#fPrices")&&(el.dataset.sup||el.dataset.mat)){openPrice({sup:el.dataset.sup,mat:el.dataset.mat})}else if(!el.closest("#panel")){openPrice({})}else{$("fPrices").insertAdjacentHTML("beforeend",priceRowHtml({}));var ins0=$("fPrices").querySelectorAll('[name=pw]');ins0[ins0.length-1].focus()}}
+  else if(a==="addprice"){if(el.closest("#panel")&&!el.closest("#fPrices")&&(el.dataset.sup||el.dataset.mat)){openPrice({sup:el.dataset.sup,mat:el.dataset.mat})}else if(!el.closest("#panel")){openPrice({})}else{$("fPrices").insertAdjacentHTML("beforeend",priceRowHtml({}));priceHead();var ins0=$("fPrices").querySelectorAll('[name=pw]');ins0[ins0.length-1].focus()}}
   else if(a==="spdel"){ev.stopPropagation();if(el.dataset.armed!=="1"){el.dataset.armed="1";el.textContent="Удалить?";return}el.disabled=true;var back=S.ctx;try{await delPrice(el.dataset.id);toast("Цена удалена");if(back&&back.reopen)back.reopen();else el.closest(".quote").remove()}catch(e){el.disabled=false;toast(failMsg(e))}}
   else if(a==="slog"){openSupplyLog()}
   else if(a==="sxview"){S.sx=el.dataset.v;render();window.scrollTo(0,0)}
   else if(a==="sxreset"){S.hf=null;renderSxBody()}
   else if(a==="raterow"){ev.stopPropagation();openRateRow(+el.dataset.s,+el.dataset.r)}
+  else if(a==="pnote"){var pr=el.closest(".price-row"),ta=pr.querySelector("[name=pn]");ta.hidden=!ta.hidden;el.textContent=ta.hidden?(ta.value.trim()?"Что входит ▸":"+ что входит"):"Что входит ▾";if(!ta.hidden)ta.focus()}
+  else if(a==="mergechk"){var cnt=$("main").querySelectorAll("[data-act=mergechk]:checked").length;$("mergeBar").hidden=cnt<2;$("mergeCnt").textContent="Выбрано строк: "+cnt;return}
+  else if(a==="mergeclear"){$("main").querySelectorAll("[data-act=mergechk]:checked").forEach(function(x){x.checked=false});$("mergeBar").hidden=true}
+  else if(a==="mergesel"){var ks=Array.from($("main").querySelectorAll("[data-act=mergechk]:checked")).map(function(x){return x.dataset.k});openMergeDialog(ks)}
+  else if(a==="mergedo"){var mi=+($("panel").querySelector("[name=mmain]:checked")||{}).value,nm=S.ctx.mnames,main=nm[mi];el.disabled=true;
+    try{await mergeNames([{main:main,others:nm.filter(function(x,i){return i!==mi})}]);closePanel();toast("Объединено в «"+main+"»")}catch(e){el.disabled=false;toast(failMsg(e))}}
+  else if(a==="samedo"){var gs=[];$("main").querySelectorAll(".same-on input:checked").forEach(function(x){var gi=+x.dataset.g,g=S.sameGroups[gi],r=+$("main").querySelector("[name=sg"+gi+"]:checked").value;
+      gs.push({main:g.items[r].name,others:g.items.filter(function(it,i){return i!==r}).map(function(it){return it.name})})});
+    if(!gs.length){toast("Отметьте хотя бы одну группу");return}el.disabled=true;
+    try{await mergeNames(gs);toast("Объединено групп: "+gs.length)}catch(e){el.disabled=false;toast(failMsg(e))}}
+  else if(a==="samediff"){var g2=S.sameGroups[+el.dataset.g];el.disabled=true;
+    try{await mutate(function(d){var ns=d.notSame&&typeof d.notSame==="object"?d.notSame:{};g2.items.forEach(function(x){g2.items.forEach(function(y){if(x.k<y.k)ns[x.k+"|"+y.k]=1})});d.notSame=ns});toast("Больше не буду предлагать")}catch(e){el.disabled=false;toast(failMsg(e))}}
+  else if(a==="unmerge"){var tg=el.dataset.t;el.disabled=true;
+    try{await mutate(function(d){var al2=d.aliases||{};Object.keys(al2).forEach(function(k){if(al2[k]===tg)delete al2[k]});d.aliases=al2});toast("Разъединено")}catch(e){el.disabled=false;toast(failMsg(e))}}
+  else if(a==="rexp"){var rk=el.dataset.k;S.rexp[rk]=!S.rexp[rk];render()}
+  else if(a==="rview"){S.rview=el.dataset.v;render()}
+  else if(a==="cmpdel"){S.cmp=S.cmp.filter(function(x){return x!==el.dataset.id});ls("rp.cmp",JSON.stringify(S.cmp));render()}
+  else if(a==="cmpthis"){if(S.cmp.indexOf(el.dataset.id)<0)S.cmp.push(el.dataset.id);ls("rp.cmp",JSON.stringify(S.cmp));closePanel();S.tab="rates";S.rview="cmp";render();window.scrollTo(0,0)}
+  else if(a==="xlpick"){var xf=$("xlFile");xf.value="";xf.click()}
+  else if(a==="pastebox"){openPasteBox()}
+  else if(a==="impparse"){var lst=parsePriceText($("impText").value);$("impRes").innerHTML=lst.length?impPreview(lst):'<div class="warnbox">Не нашла строк с ценами. Цена должна стоять в конце строки, например «Стяжка 350 р/м.п».</div>'}
+  else if(a==="impchk"){var it=S.ctx.imp[+el.dataset.i];it.on=el.checked;el.closest(".imp-row").classList.toggle("off",!it.on);var bt=$("panel").querySelector('[data-act=impdo]');if(bt)bt.textContent="Добавить в прайс: "+S.ctx.imp.filter(function(x){return x.on}).length;return}
+  else if(a==="impdo"){impApply()}
+  else if(a==="impcancel"){$("fImport").hidden=true;$("fImport").innerHTML="";S.ctx.imp=null}
+  else if(a==="xlsec"){S.ctx.xl.sec=el.checked;$("fImport").innerHTML=sheetUI();return}
   else if(a==="del"){
     if(!S.ctx)return;
     if(!S.ctx.delArmed){S.ctx.delArmed=true;el.textContent="Точно удалить?";return}
@@ -1098,11 +1372,21 @@ document.addEventListener("keydown",function(ev){
   if(ev.key==="Escape"&&!$("scrim").hidden)closePanel();
   if(ev.key==="Enter"&&ev.target.classList&&ev.target.classList.contains("row")){if(ev.target.dataset.act==="sopen")openSupplier(ev.target.dataset.id);else openContractor(ev.target.dataset.id)}
 });
-document.addEventListener("input",function(ev){if(ev.target.id==="q"){S.q=ev.target.value;if(S.tab==="rates")S.tab="people";render()}else if(ev.target.id==="sxq"){S.sxq=ev.target.value;renderSxBody()}});
+document.addEventListener("input",function(ev){
+  var di=ev.target.dataset&&ev.target.dataset.imp;if(di&&S.ctx&&S.ctx.imp){S.ctx.imp[+ev.target.dataset.i][di]=ev.target.value;return}
+  if(ev.target.id==="cmpQ"){S.cmpQ=ev.target.value;var pos=ev.target.selectionStart;render();var ne=$("cmpQ");if(ne){ne.focus();try{ne.setSelectionRange(pos,pos)}catch(e){}}return}
+  if(ev.target.id==="q"){S.q=ev.target.value;if(S.tab==="rates")S.tab="people";render()}else if(ev.target.id==="sxq"){S.sxq=ev.target.value;renderSxBody()}});
 document.addEventListener("change",function(ev){var t=ev.target;
   if(t.id==="importFile"&&t.files&&t.files[0]){var rd=new FileReader();rd.onload=function(){try{var j=JSON.parse(rd.result);if(j&&!Array.isArray(j)&&(Array.isArray(j.suppliers)||Array.isArray(j.materials))){openSupplyImport(j);return}var l=Array.isArray(j)?j:j.contractors;if(!Array.isArray(l))throw 0;openFileImport(l)}catch(e){toast("Не удалось прочитать файл. Нужен файл .json, подготовленный для реестра")}};rd.readAsText(t.files[0]);return}
+  if(t.id==="xlFile"&&t.files&&t.files[0]){readExcel(t.files[0]);return}
+  if(t.dataset&&t.dataset.act==="xlcol"){S.ctx.xl.g[t.dataset.key]=+t.value;$("fImport").innerHTML=sheetUI();return}
+  if(t.dataset&&t.dataset.act==="xlsheet"){xlPickSheet(+t.value);return}
+  if(t.id==="cmpAdd"&&t.value){S.cmp.push(t.value);ls("rp.cmp",JSON.stringify(S.cmp));render();return}
+  if(t.id==="cmpCat"){S.cmpCat=t.value;render();return}
+  if(t.id==="cmpCommon"){S.cmpCommon=t.checked;render();return}
   if(t.id==="catSel"){S.cat=t.value;var ck2=catById(S.cat);if(ck2)S.open[ck2.stage]=true;else if(S.cat.indexOf("st:")===0)S.open[S.cat.slice(3)]=true;render()}else if(t.id==="citySel"){S.city=t.value;render()}else if(t.id==="sortSel"){S.sort=t.value;render()}else if(t.id==="scatSel"){S.scat=t.value;render()}else if(t.id==="ssortSel"){S.ssort=t.value;render()}else if(t.id==="qMat"){$("qNew").hidden=t.value!=="new"}else if(t.id==="sxCat"){S.sxcat=t.value;renderSxBody()}else if(t.id==="chMat"){S.chMat=t.value;renderSxBody()}else if(t.name==="chSup"){S.chSel=Array.from(document.querySelectorAll("[name=chSup]:checked")).map(function(x){return x.value});renderSxBody()}else if(t.dataset&&t.dataset.hf){S.hf=S.hf||{};S.hf[t.dataset.hf]=t.value;if(t.dataset.hf==="c")S.hf.mat="";renderSxBody()}});
 
+try{var cm=JSON.parse(ls("rp.cmp")||"[]");if(Array.isArray(cm))S.cmp=cm.filter(function(x){return typeof x==="string"})}catch(e){}
 boot();
 })();
 </script>
