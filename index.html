@@ -252,6 +252,28 @@ tbody tr.rr:hover{background:var(--raise)}
 .pw-cell{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:0;padding-top:6px}
 .pw-cell .inp{width:100%}
 .pn-tog{border:0;background:none;padding:0;color:var(--accent);font-size:12.5px}
+.pw-meta{display:flex;flex-wrap:wrap;gap:4px 12px;font-size:12.5px;color:var(--muted)}
+.ph{grid-column:1/-1;background:var(--raise);border-radius:8px;padding:6px 10px;display:flex;flex-direction:column;gap:2px}
+.ph-i{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted)}
+.ph-i.cur{color:var(--ink)}
+.ph-i b{font-weight:500}
+.sp-head,.sp-row{display:grid;grid-template-columns:minmax(0,1fr) 54px 104px 104px 28px;gap:6px;align-items:start}
+.sp-head{font-size:12.5px;color:var(--muted);padding-top:4px}
+.sp-row{padding:6px 0;border-top:1px solid var(--line)}
+.sp-row .inp{min-height:34px;padding:5px 8px;text-align:right}
+.sp-row textarea.inp{text-align:left}
+.sp-row .pn,.sp-row .ph{grid-column:1/-1}
+.sp-name{font-size:14px;line-height:1.35;padding-top:6px;min-width:0;overflow-wrap:anywhere}
+.sp-unit{font-size:13px;color:var(--muted);padding-top:8px}
+.sp-tag{font-size:11.5px;color:var(--accent);background:var(--soft);border-radius:999px;padding:1px 7px;white-space:nowrap}
+.sp-tag.in{align-self:center}
+.sp-oth{color:var(--warn)}
+.sp-cat,.sp-type{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
+.sp-cat .inp{flex:1 1 220px;min-height:36px}
+.imp-row.sp{grid-template-columns:20px minmax(0,1fr) 54px 84px 84px 40px}
+#spRows{display:flex;flex-direction:column}
+.pdate{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);flex-wrap:wrap}
+.pdate .inp{width:auto;min-height:34px;padding:4px 8px}
 .cnote{font-size:12px;color:var(--muted);white-space:normal;max-width:260px;margin-left:auto;text-align:right;line-height:1.35;margin-top:2px}
 tr.qnote td{padding-top:0;color:var(--muted);font-size:13px;white-space:pre-line}
 .imp-note{grid-column:2/-1;font-size:12.5px;min-height:40px}
@@ -332,6 +354,8 @@ tr.qrow td.qp{font-weight:500}
   .same-g{grid-template-columns:minmax(0,1fr)}
   .price-row,.price-head{grid-template-columns:minmax(0,1fr) 56px 96px 28px}
   .imp-row{grid-template-columns:20px minmax(0,1fr) 52px 86px}
+  .sp-head,.sp-row{grid-template-columns:minmax(0,1fr) 40px 80px 80px 24px}
+  .imp-row.sp{grid-template-columns:20px minmax(0,1fr) 44px 70px 70px 0}
 }
 @media (prefers-reduced-motion:no-preference){ .panel{animation:slide .18s ease-out} @keyframes slide{from{transform:translateX(24px)}to{transform:none}} }
 </style>
@@ -384,6 +408,8 @@ tr.qrow td.qp{font-weight:500}
 <div id="toast" class="toast" hidden></div>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 <input type="file" id="xlFile" accept=".xlsx,.xls,.csv,.ods" hidden>
+<input type="file" id="sxlFile" accept=".xlsx,.xls,.csv,.ods" hidden>
+<input type="file" id="spdfFile" accept=".pdf,application/pdf" hidden>
 
 <script>
 (function(){
@@ -648,7 +674,9 @@ function guessCols(rows){
     r.forEach(function(x,j){if(g.note<0&&/примеч|состав|входит|описан|коммент/.test(x))g.note=j});
     r.forEach(function(x,j){if(j===g.note)return;if(w<0&&/наимен|работ|вид работ|перечень/.test(x))w=j;else if(u<0&&/^ед|ед\.|единиц/.test(x))u=j;else if(p<0&&/цен|руб|стоим|р\/|прайс/.test(x)&&!/кол/.test(x))p=j});
     r.forEach(function(x,j){if(/цена/.test(x)&&j!==w&&j!==u)p=p<0||!/цена/.test(r[p])?j:p});
-    if(w>=0&&p>=0){g={work:w,unit:u,price:p,note:g.note,start:i+1};return g}g.note=-1}
+    if(w>=0&&p>=0){g={work:w,unit:u,price:p,note:g.note,start:i+1};
+      var tx=function(j){var c=0,t=0;for(var k=i+1;k<Math.min(rows.length,i+60);k++){var x=String((rows[k]||[])[j]||"").trim();if(x)t++;if((x.match(/[а-яёa-z]/gi)||[]).length>=6)c++}return c};
+      var best=w,bs=tx(w);for(var jj=0;jj<(rows[i]||[]).length+6;jj++){var sc2=tx(jj);if(sc2>bs*1.5&&sc2>3){bs=sc2;best=jj}}g.work=best;if(g.price===best)g.price=-1;return g}g.note=-1}
   var st=[];for(var j=0;j<n;j++)st.push({t:0,num:0,u:0,idx:0});
   rows.forEach(function(r){r.forEach(function(x,j){x=String(x).trim();if(!x)return;var letters=(x.match(/[а-яёa-z]/gi)||[]).length;
     if(letters>=4&&x.length>6)st[j].t++;if(UNIT_RE.test(x))st[j].u++;if(/\d/.test(x)&&x.length<30&&!/^\d{1,3}\.?$/.test(x))st[j].num++;if(/^\d{1,3}\.?$/.test(x))st[j].idx++})});
@@ -672,14 +700,14 @@ function rowsFromSheet(rows,g,withSec){
 function parsePriceText(t){
   var out=[],parent="",lastNum="";
   t.split(/\r?\n/).forEach(function(line){
-    var s=line.replace(/\t/g," ").replace(/\s+/g," ").trim();if(!s)return;
+    var s=line.replace(/\t/g,"   ").replace(/\s{3,}/g," ¦ ").replace(/\s+/g," ").trim();if(!s)return;
     var numbered=/^\d+\s*[.)]\s*/.test(s);s=s.replace(/^\d+\s*[.)]\s*/,"");
-    var re=/(?:от\s*|0т\s*)?\d[\d\s]*(?:[.,]\d+)?/gi,m,cand=null;
+    var re=/(?:от\s*|0т\s*)?\d+(?:[ \u00a0]\d{3})*(?:[.,]\d+)?/gi,m,cand=null;
     while((m=re.exec(s))){var start=m.index,end=start+m[0].length,rest=s.slice(end),val=parseFloat(m[0].replace(/[^\d.,]/g,"").replace(",","."));
       var hasR=/^\s*(р|руб|₽|т\.?\s*р)/i.test(rest);
       if(rest.length<=30&&(hasR||(val>=10&&!/[а-яё]{5,}/i.test(rest))))cand={start:start}}
-    if(!cand){parent=s.replace(/[\s:.—–-]+$/,"");return}
-    var w=s.slice(0,cand.start).replace(/[\s:.…—–\-]+$/,"").trim(),p=s.slice(cand.start).trim();
+    if(!cand){parent=s.replace(/\s*¦\s*/g," ").replace(/[\s:.—–-]+$/,"");return}
+    var w=s.slice(0,cand.start).replace(/(\s*¦\s*\d*\s*)+$/,"").replace(/[\s:.…—–\-¦]+$/,"").replace(/\s*¦\s*/g," ").trim(),p=s.slice(cand.start).replace(/\s*¦\s*/g," ").trim();
     if(!w){return}
     if(numbered){parent="";lastNum=w}else if(parent){w=parent+": "+w}else if(lastNum&&/^[а-яё]/i.test(w)){w=lastNum+": "+w}
     out.push({work:w,unit:"",price:p,on:true});
@@ -800,7 +828,7 @@ function refHtml(){
       if(open){
         if(!qs.length)h+='<tr class="qrow"><td colspan="'+cols+'"><span class="r-sub">Никто из подрядчиков пока не указал цену на эту работу. Цену добавляют в карточке подрядчика, в блоке «Прайс».</span></td></tr>';
         qs.slice().sort(function(a,b){var x=firstNum(a.p.price),y=firstNum(b.p.price);return (x==null?1e12:x)-(y==null?1e12:y)}).forEach(function(q){var stt=q.c.status||"new";
-          h+='<tr class="qrow"><td colspan="2"><button type="button" class="linkish" data-act="open" data-id="'+esc(q.c.id)+'">'+esc(q.c.name)+'</button> <span class="st '+esc(stt)+'">'+STATUS[stt]+'</span></td><td colspan="'+(cols-2)+'" class="num qp">'+esc(priceText(q.p))+"</td></tr>"+(q.p.note?'<tr class="qrow qnote"><td colspan="'+cols+'">'+esc(q.p.note)+"</td></tr>":"")});
+          h+='<tr class="qrow"><td colspan="2"><button type="button" class="linkish" data-act="open" data-id="'+esc(q.c.id)+'">'+esc(q.c.name)+'</button> <span class="st '+esc(stt)+'">'+STATUS[stt]+'</span></td><td colspan="'+(cols-2)+'" class="num qp">'+esc(priceText(q.p))+(q.p.date?' <span class="r-sub">с '+esc(dRu(q.p.date))+"</span>":"")+"</td></tr>"+(q.p.note?'<tr class="qrow qnote"><td colspan="'+cols+'">'+esc(q.p.note)+"</td></tr>":"")});
       }})});
   return h+"</tbody></table></div>";
 }
@@ -825,7 +853,7 @@ function cmpHtml(){
     var best=-1;if(nums.length>1&&Object.keys(uk).length===1){var mn=Math.min.apply(null,nums.map(function(x){return x[1]}));nums.forEach(function(x){if(x[1]===mn)best=x[0]})}
     var vars=Object.keys(r.names).filter(function(n){return nkey(n)!==nkey(r.work)});
     h+='<tr><td><label class="mrg"><input type="checkbox" data-act="mergechk" data-k="'+esc(k)+'"><span>'+esc(r.work)+(vars.length?'<small title="'+esc(vars.join("\n"))+'">объединено: '+(vars.length+1)+" варианта</small>":"")+"</span></label></td>"+
-      sel.map(function(c,i){var p=r.cells[i];return '<td class="num'+(i===best?" best":"")+'">'+(p?esc(priceText(p))+(p.note?'<div class="cnote">'+esc(p.note)+"</div>":""):'<span class="r-sub">—</span>')+"</td>"}).join("")+"</tr>"});
+      sel.map(function(c,i){var p=r.cells[i];return '<td class="num'+(i===best?" best":"")+'">'+(p?esc(priceText(p))+(p.date?'<div class="cnote">с '+esc(dRu(p.date))+((p.hist||[]).length?", раньше "+esc(priceText(p.hist[p.hist.length-1])):"")+"</div>":"")+(p.note?'<div class="cnote">'+esc(p.note)+"</div>":""):'<span class="r-sub">—</span>')+"</td>"}).join("")+"</tr>"});
   return h+"</tbody></table></div><p class=\"hint\" style=\"margin-top:10px\">Зелёным отмечена самая низкая цена в строке, если единицы измерения у всех одинаковые. Если одна работа записана у подрядчиков по-разному, отметьте строки галочками и нажмите «Объединить», или откройте «Похожие работы».</p>";
 }
 
@@ -837,9 +865,15 @@ function openPanel(title,body,foot,ctx){
 }
 function closePanel(){$("scrim").hidden=true;$("panel").innerHTML="";S.ctx=null}
 
-function priceRowHtml(p){var w=p.work||"",n=p.note||"";return '<div class="price-row"><div class="pw-cell">'+(w?'<div class="pw-text">'+esc(w)+'</div><input type="hidden" name="pw" value="'+esc(w)+'">':'<input class="inp" name="pw" placeholder="Название работы">')+
-  '<button type="button" class="pn-tog" data-act="pnote">'+(n?"Что входит ▾":"+ что входит")+'</button></div><input class="inp" name="pu" placeholder="ед." value="'+esc(p.unit||"")+'"><input class="inp" name="pp" placeholder="Цена" value="'+esc(p.price||"")+'"><button type="button" class="btn ghost" data-act="delprice" aria-label="Удалить расценку">×</button>'+
-  '<textarea class="inp pn" name="pn" rows="2" placeholder="Что входит в работу, как работает, условия"'+(n?"":" hidden")+'>'+esc(n)+'</textarea></div>'}
+function todayISO(){return new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)}
+function dRu(iso){return iso?new Date(iso+"T00:00:00").toLocaleDateString("ru-RU"):""}
+function histHtml(p){var h=(p.hist||[]).slice(),rows=[],to=p.date||"";
+  rows.push('<div class="ph-i cur"><b>'+esc(priceText(p))+'</b><span>'+(p.date?"с "+dRu(p.date):"действует сейчас")+"</span></div>");
+  for(var i=h.length-1;i>=0;i--){var x=h[i];rows.push('<div class="ph-i"><span class="ph-p">'+esc(priceText(x))+'</span><span>'+(x.date?"с "+dRu(x.date):"")+(to?(x.date?" по ":"до ")+dRu(to):"")+"</span></div>");to=x.date||""}
+  return rows.join("")}
+function priceRowHtml(p){var w=p.work||"",n=p.note||"",hn=(p.hist||[]).length;return '<div class="price-row" data-key="'+esc(nkey(w))+'"><div class="pw-cell">'+(w?'<div class="pw-text">'+esc(w)+'</div><input type="hidden" name="pw" value="'+esc(w)+'">':'<input class="inp" name="pw" placeholder="Название работы">')+
+  '<div class="pw-meta">'+(p.date?'<span>с '+esc(dRu(p.date))+"</span>":"")+(hn?'<button type="button" class="pn-tog" data-act="phist">история ('+hn+")</button>":"")+'<button type="button" class="pn-tog" data-act="pnote">'+(n?"Что входит ▾":"+ что входит")+'</button></div></div><input class="inp" name="pu" placeholder="ед." value="'+esc(p.unit||"")+'"><input class="inp" name="pp" placeholder="Цена" value="'+esc(p.price||"")+'"><button type="button" class="btn ghost" data-act="delprice" aria-label="Удалить расценку">×</button>'+
+  '<textarea class="inp pn" name="pn" rows="2" placeholder="Что входит в работу, как работает, условия"'+(n?"":" hidden")+'>'+esc(n)+'</textarea>'+(hn?'<div class="ph" hidden>'+histHtml(p)+"</div>":"")+'</div>'}
 function pickerHtml(){
   var have={};$("fPrices").querySelectorAll("[name=pw]").forEach(function(x){have[x.value]=1});
   if(!S.rates.length)return '<p class="hint">Разделов с расценками пока нет. Добавьте работу вручную кнопкой «Своя работа».</p>';
@@ -872,6 +906,7 @@ function openContractor(id){
       '<div class="btnrow"><button type="button" class="btn small primary" data-act="xlpick">Загрузить из Excel</button><button type="button" class="btn small" data-act="pastebox">Вставить текстом</button><button type="button" class="btn small" data-act="pickprice">Выбрать из разделов</button><button type="button" class="btn small" data-act="addprice">Своя работа</button>'+(c&&(d.prices||[]).length?'<button type="button" class="btn small" data-act="cmpthis" data-id="'+esc(c.id)+'">Сравнить с другими</button>':"")+'</div>'+
       '<div id="fImport" class="imp-box" hidden></div><div id="fPicker" hidden></div>'+
       ((d.prices||[]).length?"":'<p class="hint">Прайса пока нет. Загрузите файл Excel, который прислал подрядчик, или вставьте прайс текстом.</p>')+
+      (c&&(d.prices||[]).length?'<label class="pdate">Изменённые цены действуют с <input class="inp" type="date" id="fPDate" value="'+todayISO()+'"></label>':"")+
       '<div class="price-head" '+((d.prices||[]).length?"":"hidden")+'><span>Работа</span><span>Ед.</span><span>Цена</span><span></span></div><div id="fPrices" style="display:flex;flex-direction:column;gap:6px">'+(d.prices||[]).map(priceRowHtml).join("")+'</div></div>'+
     '<div id="fWarn"></div>';
   var foot=(c?'<button type="button" class="btn danger" data-act="del">Удалить</button>':"<span></span>")+'<button class="btn primary" id="pSave">Сохранить</button>';
@@ -882,7 +917,14 @@ function openContractor(id){
     if(raw&&!phones.length){$("fWarn").innerHTML='<div class="warnbox">Не удалось разобрать номер телефона. Проверьте его.</div>';return}
     if(!S.ctx.dupOk){var dup=S.list.filter(function(x){return x.id!==id&&(x.phones||[]).some(function(p){return phones.indexOf(p)>=0})});
       if(dup.length){S.ctx.dupOk=true;$("fWarn").innerHTML='<div class="warnbox">Такой номер уже есть у: '+esc(dup.map(function(x){return x.name}).join(", "))+". Нажмите «Сохранить» ещё раз, если это не ошибка.</div>";return}}
-    var prices=[];$("fPrices").querySelectorAll(".price-row").forEach(function(r){var w=r.querySelector('[name=pw]').value.trim(),p=r.querySelector('[name=pp]').value.trim(),u=r.querySelector('[name=pu]').value.trim(),nn=r.querySelector('[name=pn]').value.trim();if(w||p){var o={work:w,price:p};if(u)o.unit=u;if(nn)o.note=nn;prices.push(o)}});
+    var prev={};((c&&c.prices)||[]).forEach(function(q){prev[nkey(q.work)]=q});var nd=($("fPDate")&&$("fPDate").value)||todayISO(),changed=0;
+    var prices=[];$("fPrices").querySelectorAll(".price-row").forEach(function(r){var w=r.querySelector('[name=pw]').value.trim(),p=r.querySelector('[name=pp]').value.trim(),u=r.querySelector('[name=pu]').value.trim(),nn=r.querySelector('[name=pn]').value.trim();if(w||p){var o={work:w,price:p};if(u)o.unit=u;if(nn)o.note=nn;
+      var q=prev[nkey(w)];
+      if(q){var same=String(q.price||"").replace(/\s/g,"")===p.replace(/\s/g,"")&&String(q.unit||"")===u;
+        if(same){if(q.date)o.date=q.date;if(q.hist&&q.hist.length)o.hist=q.hist}
+        else{o.date=nd;o.hist=(q.hist||[]).concat([{price:q.price||"",unit:q.unit||"",date:q.date||""}]).slice(-50);changed++}}
+      else o.date=nd;
+      prices.push(o)}});
     var o={name:name,spec:$("fSpec").value.trim(),cats:Array.from($("panel").querySelectorAll('[name=cat]:checked')).map(function(x){return x.value}),city:$("fCity").value.trim(),phones:phones,
       form:$("fForm").value,vat:$("fVat").value,crew:$("fCrew").value.trim(),rating:+$("fRating").dataset.v||0,status:$("fStatus").value,objects:$("fObjects").value.trim(),note:$("fNote").value.trim(),prices:prices,
       created:(c&&c.created)||Date.now(),updated:Date.now()};
@@ -1032,6 +1074,136 @@ function priceLine(p,withSup){
 }
 function catChips(sel){return '<div class="chips" id="fCats">'+S.mcats.map(function(c){return '<label class="tog"><input type="checkbox" name="scat" value="'+esc(c)+'"'+(sel.indexOf(c)>=0?" checked":"")+"><span>"+esc(c)+"</span></label>"}).join("")+"</div>"}
 
+/* ---------- supplier price list in the supplier card ---------- */
+function moneyIn(n){return n==null?"":String(n).replace(".",",")}
+function supRows(sid){
+  var by={};S.prs.filter(function(p){return p.sup===sid}).forEach(function(p){(by[p.mat]=by[p.mat]||[]).push(p)});
+  return Object.keys(by).map(function(mid){var all=by[mid].slice().sort(byTime),cur={};all.forEach(function(p){if(!cur[p.type])cur[p.type]=p});
+    if(cur.other&&((cur.cash&&pTime(cur.cash)>=pTime(cur.other)&&(cur.cash.created||0)>=(cur.other.created||0))||(cur.vat&&pTime(cur.vat)>=pTime(cur.other)&&(cur.vat.created||0)>=(cur.other.created||0))))delete cur.other;
+    return {mat:mid,m:S.matIx[mid],all:all,cash:cur.cash||null,vat:cur.vat||null,other:cur.other||null}}).filter(function(r){return r.m})
+    .sort(function(a,b){return norm(a.m.cat||"").localeCompare(norm(b.m.cat||""),"ru")||norm(matLabel(a.m)).localeCompare(norm(matLabel(b.m)),"ru",{numeric:true})});
+}
+function spRowHtml(r){
+  var m=r.m||{},cur=[r.cash,r.vat,r.other].filter(Boolean),last=cur.slice().sort(byTime)[0],older=r.all?r.all.filter(function(p){return cur.indexOf(p)<0}):[];
+  var oc=r.cash&&r.cash.amount!=null?r.cash.amount:"",ov=r.vat&&r.vat.amount!=null?r.vat.amount:"";
+  var note=r.note!=null?r.note:((last&&last.raw)||"");
+  var otherTxt=r.other?pText(r.other):"",ph=r.other&&r.other.amount!=null?moneyIn(r.other.amount):"—";
+  return '<div class="sp-row" data-mat="'+esc(r.mat||"")+'"'+(r.isNew?' data-new="1" data-name="'+esc(r.name)+'" data-unit="'+esc(r.unit||"")+'"':"")+' data-oc="'+esc(oc)+'" data-ov="'+esc(ov)+'" data-onote="'+esc(note)+'">'+
+    '<div class="sp-name"><div>'+esc(r.isNew?r.name:matLabel(m))+(r.isNew?' <span class="sp-tag">'+(r.mat?"уже есть в материалах":"новый материал")+"</span>":"")+'</div>'+
+    '<div class="pw-meta">'+(last&&last.date?"<span>с "+esc(dRu(last.date))+"</span>":(last&&last.archive?"<span>архив</span>":""))+(otherTxt&&!r.isNew?'<span class="sp-oth">цена '+esc(otherTxt)+(r.other.payment?" ("+esc(r.other.payment)+")":"")+" — впишите её в нужную колонку при изменении</span>":"")+
+      (older.length?'<button type="button" class="pn-tog" data-act="sphist">история ('+older.length+")</button>":"")+'<button type="button" class="pn-tog" data-act="spnote">'+(note?"Примечание ▾":"+ примечание")+"</button></div></div>"+
+    '<span class="sp-unit">'+esc(r.isNew?(r.unit||""):(m.unit||""))+'</span>'+
+    '<input class="inp" name="sc" inputmode="decimal" placeholder="'+esc(r.isNew?"—":ph)+'" value="'+esc(moneyIn(r.isNew?r.cash:oc))+'">'+
+    '<input class="inp" name="sv" inputmode="decimal" placeholder="—" value="'+esc(moneyIn(r.isNew?r.vat:ov))+'">'+
+    (r.isNew?'<button type="button" class="btn ghost" data-act="spdrop" aria-label="Убрать строку">×</button>':"<span></span>")+
+    '<textarea class="inp pn" name="snote" rows="2" placeholder="Примечание: условия, фасовка, сколько в поддоне"'+(note?"":" hidden")+">"+esc(note)+"</textarea>"+
+    (older.length?'<div class="ph" hidden>'+older.map(function(p){return priceLine(p,false)}).join("")+"</div>":"")+"</div>";
+}
+function supPriceBox(id){
+  var rows=supRows(id);
+  return '<div class="field price-box"><span>Прайс поставщика · <b id="spCount">'+rows.length+'</b></span>'+
+    '<div class="btnrow"><button type="button" class="btn small primary" data-act="sxl">Загрузить из Excel</button><button type="button" class="btn small" data-act="spdf">Загрузить PDF</button><button type="button" class="btn small" data-act="spaste">Вставить текстом</button><button type="button" class="btn small" data-act="addprice" data-sup="'+esc(id)+'">Добавить цену</button></div>'+
+    '<div id="spImport" class="imp-box" hidden></div>'+
+    (rows.length?'<label class="pdate">Изменённые и новые цены действуют с <input class="inp" type="date" id="sPDate" value="'+todayISO()+'"></label>':'<p class="hint">Прайса пока нет. Загрузите файл, который прислал поставщик: Excel, PDF или текст.</p><label class="pdate" hidden>Цены действуют с <input class="inp" type="date" id="sPDate" value="'+todayISO()+'"></label>')+
+    '<div class="sp-head"'+(rows.length?"":" hidden")+'><span>Материал</span><span>Ед.</span><span>Наличные, ₽</span><span>С НДС, ₽</span><span></span></div>'+
+    '<div id="spRows">'+rows.map(spRowHtml).join("")+"</div></div>";
+}
+/* --- import into the supplier card --- */
+function spSheetUI(){
+  var I=S.ctx.sxl,rows=I.rows,n=0;rows.forEach(function(r){n=Math.max(n,r.length)});
+  var colName=function(j){var head=I.g.start>0?String((rows[I.g.start-1]||[])[j]||"").trim():"";var smp="";for(var i=I.g.start;i<rows.length&&!smp;i++){smp=String(rows[i][j]||"").trim()}return String.fromCharCode(65+(j%26))+(j>=26?String(Math.floor(j/26)):"")+(head?": "+head:smp?": "+smp:"")};
+  var sel=function(key,label,none){var h='<label class="field"><span>'+label+'</span><select class="inp" data-act="spcol" data-key="'+key+'">'+(none?'<option value="-1">нет</option>':"");for(var j=0;j<n;j++)h+='<option value="'+j+'"'+(I.g[key]===j?" selected":"")+">"+esc(colName(j).slice(0,40))+"</option>";return h+"</select></label>"};
+  return (I.sheets.length>1?'<label class="field"><span>Лист</span><select class="inp" data-act="spsheet">'+I.sheets.map(function(s,i){return '<option value="'+i+'"'+(i===I.si?" selected":"")+">"+esc(s)+"</option>"}).join("")+"</select></label>":"")+
+    '<div class="grid2">'+sel("work","Колонка с материалом")+sel("unit","Колонка с ед. изм.",true)+sel("price","Колонка с ценой наличными",true)+sel("vat","Колонка с ценой с НДС",true)+sel("note","Колонка с примечанием",true)+'</div>'+
+    '<label class="check"><input type="checkbox" data-act="spsec"'+(I.sec?" checked":"")+'> Добавлять к названию раздел прайса (например «Труба квадратная: 20×20»)</label>'+spPreview(spRowsFromSheet());
+}
+function spRowsFromSheet(){
+  var I=S.ctx.sxl,g=I.g,out=[],sec="",cell=function(r,k){return k>=0?String(r[k]==null?"":r[k]).replace(/\s+/g," ").trim():""};
+  for(var i=g.start;i<I.rows.length;i++){var r=I.rows[i],w=cell(r,g.work),u=cell(r,g.unit),c=cell(r,g.price),v=cell(r,g.vat),nt=cell(r,g.note);
+    if(!/[а-яёa-z]{2}/i.test(w))continue;
+    var hc=/\d/.test(c),hv=/\d/.test(v);
+    if(!hc&&!hv&&!u){sec=w.replace(/[:\s]+$/,"");continue}
+    out.push({name:I.sec&&sec?sec+": "+w:w,unit:u,cash:hc?numOf(c):null,vat:hv?numOf(v):null,note:nt,on:hc||hv});
+  }
+  return out;
+}
+function numOf(s){var m=String(s).replace(/\s/g,"").replace(/(\d),(\d)/g,"$1.$2").match(/\d+(?:\.\d+)?/);return m?Math.round(parseFloat(m[0])*100)/100:null}
+function spTextRows(t){return parsePriceText(t).map(function(x){var u=String(x.price).replace(/^(от\s*)?[\d\s.,]+/i,"").replace(/^\s*(р|руб|₽)\.?\s*/i,"").replace(/^\//,"").trim();return {name:x.work,unit:u,cash:numOf(x.price),vat:null,note:/^от/i.test(x.price)?"цена от":"",on:true}})}
+function spPreview(list){
+  S.ctx.simp=list;var n=list.filter(function(x){return x.on}).length,ex=matIndex();
+  if(S.ctx.sid)S.prs.forEach(function(p){if(p.sup===S.ctx.sid){var m=S.matIx[p.mat];if(m){ex[nkey(m.name)]=m.id;ex[nkey(matLabel(m))]=m.id}}});
+  list.forEach(function(x){x.mat=ex[nkey(x.name)]||""});
+  return '<div class="sp-cat"><span>Категория для новых материалов</span><input class="inp" id="spCat" list="spCatDl" value="'+esc(S.ctx.spCat||"")+'" placeholder="Например: Металлопрокат"><datalist id="spCatDl">'+S.mcats.map(function(c){return '<option value="'+esc(c)+'">'}).join("")+"</datalist></div>"+
+    '<div class="sp-type"><span>Цены в колонке «нал.» на самом деле:</span><label class="check"><input type="radio" name="spT" value="cash" checked> наличными / без НДС</label><label class="check"><input type="radio" name="spT" value="vat"> с НДС</label></div>'+
+    '<div class="imp-list">'+list.map(function(x,i){return '<div class="imp-row sp'+(x.on?"":" off")+'"><input type="checkbox" data-act="spchk" data-i="'+i+'"'+(x.on?" checked":"")+'>'+
+      '<input class="inp" data-simp="name" data-i="'+i+'" value="'+esc(x.name)+'"><input class="inp" data-simp="unit" data-i="'+i+'" value="'+esc(x.unit)+'" placeholder="ед."><input class="inp" data-simp="cash" data-i="'+i+'" value="'+esc(moneyIn(x.cash))+'" placeholder="нал."><input class="inp" data-simp="vat" data-i="'+i+'" value="'+esc(moneyIn(x.vat))+'" placeholder="с НДС">'+
+      (x.mat?'<span class="sp-tag in">есть</span>':'<span></span>')+(x.note?'<textarea class="inp imp-note" data-simp="note" data-i="'+i+'" rows="2">'+esc(x.note)+"</textarea>":"")+"</div>"}).join("")+"</div>"+
+    '<div class="btnrow"><button type="button" class="btn primary small" data-act="spdo">Добавить в прайс: '+n+'</button><button type="button" class="btn small" data-act="spcancel">Отмена</button></div>';
+}
+function matIndex(){var ix={};S.mats.forEach(function(m){ix[nkey(matLabel(m))]=m.id;ix[nkey(m.name+" "+(m.spec||""))]=m.id;if(!m.spec)ix[nkey(m.name)]=m.id});return ix}
+function spApply(){
+  var asVat=(($("panel").querySelector("[name=spT]:checked")||{}).value==="vat"),cat=($("spCat")&&$("spCat").value.trim())||"";S.ctx.spCat=cat;
+  var list=(S.ctx.simp||[]).filter(function(x){return x.on&&String(x.name).trim()}),box=$("spRows"),have={};
+  box.querySelectorAll(".sp-row").forEach(function(r){var k=r.dataset.mat||("n:"+nkey(r.dataset.name||""));have[k]=r});
+  var add=0,upd=0;
+  list.forEach(function(x){var c=x.cash==null||x.cash===""?null:numOf(x.cash),v=x.vat==null||x.vat===""?null:numOf(x.vat);if(asVat&&v==null){v=c;c=null}
+    var k=x.mat||("n:"+nkey(x.name)),r=have[k];
+    if(r){if(c!=null)r.querySelector("[name=sc]").value=moneyIn(c);if(v!=null)r.querySelector("[name=sv]").value=moneyIn(v);if(x.note){var ta=r.querySelector("[name=snote]");ta.value=x.note;ta.hidden=false}upd++}
+    else{box.insertAdjacentHTML("beforeend",spRowHtml({isNew:true,mat:x.mat,name:String(x.name).trim(),unit:x.unit,cash:c,vat:v,note:x.note||"",cat:cat}));box.lastElementChild.dataset.cat=cat;have[k]=box.lastElementChild;add++}});
+  $("spImport").hidden=true;$("spImport").innerHTML="";S.ctx.simp=null;
+  $("panel").querySelector(".sp-head").hidden=false;var pd=$("sPDate");if(pd)pd.parentNode.hidden=false;$("spCount").textContent=box.children.length;
+  $("fWarn").innerHTML='<div class="warnbox">В прайс добавлено: '+add+(upd?", обновлено цен: "+upd:"")+'. Проверьте дату и нажмите «Сохранить» внизу.</div>';
+}
+function spCollect(sid){
+  var nd=($("sPDate")&&$("sPDate").value)||todayISO(),now=Date.now(),ops=[],bad="";
+  document.querySelectorAll("#spRows .sp-row").forEach(function(r){
+    var cIn=r.querySelector("[name=sc]").value.trim(),vIn=r.querySelector("[name=sv]").value.trim(),note=r.querySelector("[name=snote]").value.trim();
+    var c=cIn?parseMoney(cIn):null,v=vIn?parseMoney(vIn):null;if(isNaN(c)||isNaN(v)){bad=r.querySelector(".sp-name div").textContent;return}
+    var oc=r.dataset.oc===""?null:Number(r.dataset.oc),ov=r.dataset.ov===""?null:Number(r.dataset.ov),noteCh=note!==(r.dataset.onote||"");
+    var op={mat:r.dataset.mat||"",isNew:r.dataset.new==="1"&&!r.dataset.mat,name:r.dataset.name||"",unit:r.dataset.unit||"",cat:r.dataset.cat||"",note:note,prices:[]};
+    if(c!=null&&(c!==oc||(noteCh&&!op.isNew)))op.prices.push(["cash",c,"Наличные"]);
+    if(v!=null&&(v!==ov||(noteCh&&!op.isNew)))op.prices.push(["vat",v,"С НДС"]);
+    if(r.dataset.new==="1"&&!op.prices.length&&c==null&&v==null)op.prices.push(["other",null,"Цена не указана"]);
+    if(op.prices.length)ops.push(op)});
+  return {ops:ops,date:nd,bad:bad,now:now};
+}
+function spWrite(s,sid,col,supName){
+  var n=0,k=0;col.ops.forEach(function(op){var m=op.mat;
+    if(!m||!s.materials[m]){var cat=op.cat||"Без категории";m=newId();s.materials[m]={cat:cat,name:op.name,spec:"",unit:op.unit};if(s.cats.indexOf(cat)<0)s.cats.push(cat)}
+    op.prices.forEach(function(t){s.prices[newId()]={sup:sid,mat:m,amount:t[1],type:t[0],payment:t[2],delivery:"",date:col.date,raw:op.note||(t[1]==null?"цена не указана":""),src:"Прайс",created:col.now+(k++)};n++})});
+  if(n)slog(s,"Обновлён прайс",supName+": цен "+n+", с "+dRu(col.date));
+  return n;
+}
+/* --- PDF to text (for the paste parser) --- */
+var PDFJS="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+function loadPdfJs(){if(window.pdfjsLib)return Promise.resolve();return new Promise(function(ok,no){var sc=document.createElement("script");sc.src=PDFJS;sc.onload=function(){window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS.replace("pdf.min.js","pdf.worker.min.js");ok()};sc.onerror=no;document.head.appendChild(sc)})}
+function pdfText(file){return loadPdfJs().then(function(){return file.arrayBuffer()}).then(function(buf){return window.pdfjsLib.getDocument({data:buf}).promise}).then(function(doc){
+  var pages=[];for(var i=1;i<=doc.numPages;i++)pages.push(doc.getPage(i).then(function(pg){return pg.getTextContent()}));
+  return Promise.all(pages).then(function(cs){return cs.map(function(c){var lines={};c.items.forEach(function(it){var y=Math.round(it.transform[5]/3);(lines[y]=lines[y]||[]).push(it)});
+    return Object.keys(lines).sort(function(a,b){return b-a}).map(function(y){return lines[y].sort(function(a,b){return a.transform[4]-b.transform[4]}).map(function(it){return it.str.trim()}).filter(Boolean).join("   ").trim()}).filter(Boolean).join("\n")}).join("\n")})})}
+
+function readSupExcel(file){
+  var box=$("spImport");box.hidden=false;box.innerHTML='<p class="hint">Читаю файл…</p>';
+  loadXLSX().then(function(){return file.arrayBuffer()}).then(function(buf){var wb=XLSX.read(buf,{type:"array"});
+    var names=wb.SheetNames.filter(function(n){var ws=wb.Sheets[n];return ws&&ws["!ref"]});
+    S.ctx.sxl={wb:wb,sheets:names.length?names:wb.SheetNames,si:0,sec:false};spPickSheet(0)})
+  .catch(function(){box.innerHTML='<div class="warnbox">Не удалось прочитать файл. Подходят таблицы Excel (.xlsx, .xls) и .csv.</div>'});
+}
+function spPickSheet(i){var I=S.ctx.sxl,ws=I.wb.Sheets[I.sheets[i]];I.si=i;
+  I.rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:false,defval:""}).map(function(r){return r.map(function(x){return String(x)})});
+  var g=guessCols(I.rows);g.vat=-1;
+  var st0=g.start,vs=-1;
+  for(var hr=Math.max(0,st0-3);hr<st0+3&&hr<I.rows.length;hr++){var rw=I.rows[hr]||[],hit=false;
+    if(rw.some(function(x){return /\d{3,}/.test(String(x).replace(/\s/g,""))&&!/%/.test(x)}))continue;
+    rw.forEach(function(x,j){x=norm(x);if(j===g.work||j===g.unit)return;
+      var sc=/с ндс|ндс\s*2\d|2[02]\s*%/.test(x)?3:/ндс/.test(x)&&!/без ндс/.test(x)?2:/безнал|б\/н/.test(x)?1:0;
+      if(sc>vs&&sc>0){vs=sc;g.vat=j;hit=true}else if(/^нал|налич|без ндс/.test(x)){g.price=j;hit=true}});
+    if(hit&&hr>=g.start)g.start=hr+1}
+  if(g.vat===g.price)g.vat=-1;I.g=g;$("spImport").innerHTML=spSheetUI()}
+function openSupPaste(text){var box=$("spImport");box.hidden=false;S.ctx.sxl=null;
+  box.innerHTML='<p class="hint">Вставьте прайс текстом: по одному материалу на строку, цена в конце строки. Текст с фото на телефоне: откройте фото и нажмите «Скопировать текст».</p><textarea class="inp" id="spText" style="min-height:200px">'+esc(text||"")+'</textarea><div class="btnrow"><button type="button" class="btn small" data-act="spparse">Разобрать</button><button type="button" class="btn small" data-act="spcancel">Отмена</button></div><div id="spRes"></div>';
+  if(text)$("spRes").innerHTML=spPreview(spTextRows(text));}
+
 function openSupplier(id){
   var x=id?S.supIx[id]:null;if(id&&!x)return;
   var d=x||{name:"",phones:[],cats:S.scat!=="all"&&S.scat!=="none"?[S.scat]:[],channels:[],note:""};
@@ -1042,10 +1214,10 @@ function openSupplier(id){
     '<div class="field"><span>Каналы связи</span><div class="chips">'+CHANNELS.map(function(c){return '<label class="tog"><input type="checkbox" name="sch" value="'+c+'"'+((d.channels||[]).indexOf(c)>=0?" checked":"")+"><span>"+c+"</span></label>"}).join("")+"</div></div>"+
     '<div class="field"><span>Категории материалов</span>'+catChips(d.cats||[])+'<input class="inp" id="fNewCat" placeholder="Новая категория, если нужной нет"></div>'+
     '<label class="field"><span>Заметка</span><textarea class="inp" id="fNote" placeholder="Условия, менеджер, что важно знать">'+esc(d.note||"")+"</textarea></label>"+
-    (x?'<div class="field"><span>Цены поставщика ('+ps.length+')</span>'+(ps.length?ps.map(function(p){return priceLine(p,false)}).join(""):'<p class="hint">Цен пока нет.</p>')+'<div class="btnrow"><button type="button" class="btn small" data-act="addprice" data-sup="'+esc(id)+'">Добавить цену</button></div></div>':"")+
+    supPriceBox(id||"")+
     '<div id="fWarn"></div>';
   var foot=(x?'<button type="button" class="btn danger" data-act="del">Удалить</button>':"<span></span>")+'<button class="btn primary" id="pSave">Сохранить</button>';
-  openPanel(x?x.name:"Новый поставщик",body,foot,{nofocus:!!x,dupOk:false,delArmed:false,sdel:x?async function(){await mutate(function(dd){var s=sup0(dd);delete s.suppliers[id];Object.keys(s.prices).forEach(function(k){if(s.prices[k].sup===id)delete s.prices[k]});slog(s,"Удалён поставщик",x.name)})}:null,submit:async function(){
+  openPanel(x?x.name:"Новый поставщик",body,foot,{sid:id||"",nofocus:!!x,dupOk:false,delArmed:false,sdel:x?async function(){await mutate(function(dd){var s=sup0(dd);delete s.suppliers[id];Object.keys(s.prices).forEach(function(k){if(s.prices[k].sup===id)delete s.prices[k]});slog(s,"Удалён поставщик",x.name)})}:null,submit:async function(){
     var name=$("fName").value.trim();if(!name){$("fName").focus();return}
     var phones=parsePhones($("fPhones").value);
     if($("fPhones").value.trim()&&!phones.length){$("fWarn").innerHTML='<div class="warnbox">Не удалось разобрать номер телефона. Проверьте его.</div>';return}
@@ -1054,8 +1226,9 @@ function openSupplier(id){
     var cats=Array.from($("panel").querySelectorAll("[name=scat]:checked")).map(function(i){return i.value}),nc=$("fNewCat").value.trim();
     if(nc){var ex=S.mcats.filter(function(c){return norm(c)===norm(nc)})[0];nc=ex||nc;if(cats.indexOf(nc)<0)cats.push(nc)}
     var o={name:name,phones:phones,channels:Array.from($("panel").querySelectorAll("[name=sch]:checked")).map(function(i){return i.value}),cats:cats,note:$("fNote").value.trim(),created:(x&&x.created)||Date.now(),updated:Date.now()};
-    $("pSave").disabled=true;var nid=id||newId();
-    try{await mutate(function(dd){var s=sup0(dd);s.suppliers[nid]=o;if(nc&&s.cats.indexOf(nc)<0)s.cats.push(nc);slog(s,x?"Изменён поставщик":"Добавлен поставщик",name)});closePanel();toast("Сохранено")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
+    var col=spCollect();if(col.bad){$("fWarn").innerHTML='<div class="warnbox">Цена у «'+esc(col.bad)+'» должна быть числом, например 18900 или 31994,66.</div>';return}
+    $("pSave").disabled=true;var nid=id||newId(),pn=0;
+    try{await mutate(function(dd){var s=sup0(dd);s.suppliers[nid]=o;if(nc&&s.cats.indexOf(nc)<0)s.cats.push(nc);slog(s,x?"Изменён поставщик":"Добавлен поставщик",name);pn=spWrite(s,nid,col,name)});closePanel();toast(pn?"Сохранено, цен: "+pn:"Сохранено")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
   }});
 }
 
@@ -1332,6 +1505,18 @@ document.addEventListener("click",async function(ev){
   else if(a==="sxview"){S.sx=el.dataset.v;render();window.scrollTo(0,0)}
   else if(a==="sxreset"){S.hf=null;renderSxBody()}
   else if(a==="raterow"){ev.stopPropagation();openRateRow(+el.dataset.s,+el.dataset.r)}
+  else if(a==="sxl"){var sf=$("sxlFile");sf.value="";sf.click()}
+  else if(a==="spdf"){var pf=$("spdfFile");pf.value="";pf.click()}
+  else if(a==="spaste"){openSupPaste("")}
+  else if(a==="spparse"){var sl=spTextRows($("spText").value);$("spRes").innerHTML=sl.length?spPreview(sl):'<div class="warnbox">Не нашла строк с ценами. Цена должна стоять в конце строки, например «Щебень 5-20 1800 р/т».</div>'}
+  else if(a==="spchk"){var si2=S.ctx.simp[+el.dataset.i];si2.on=el.checked;el.closest(".imp-row").classList.toggle("off",!si2.on);var sb=$("panel").querySelector("[data-act=spdo]");if(sb)sb.textContent="Добавить в прайс: "+S.ctx.simp.filter(function(x){return x.on}).length;return}
+  else if(a==="spdo"){spApply()}
+  else if(a==="spcancel"){$("spImport").hidden=true;$("spImport").innerHTML="";S.ctx.simp=null}
+  else if(a==="spdrop"){el.closest(".sp-row").remove();$("spCount").textContent=$("spRows").children.length}
+  else if(a==="sphist"){var shb=el.closest(".sp-row").querySelector(".ph");shb.hidden=!shb.hidden}
+  else if(a==="spnote"){var sta=el.closest(".sp-row").querySelector("[name=snote]");sta.hidden=!sta.hidden;if(!sta.hidden)sta.focus()}
+  else if(a==="spsec"){S.ctx.sxl.sec=el.checked;$("spImport").innerHTML=spSheetUI();return}
+  else if(a==="phist"){var hb=el.closest(".price-row").querySelector(".ph");hb.hidden=!hb.hidden}
   else if(a==="pnote"){var pr=el.closest(".price-row"),ta=pr.querySelector("[name=pn]");ta.hidden=!ta.hidden;el.textContent=ta.hidden?(ta.value.trim()?"Что входит ▸":"+ что входит"):"Что входит ▾";if(!ta.hidden)ta.focus()}
   else if(a==="mergechk"){var cnt=$("main").querySelectorAll("[data-act=mergechk]:checked").length;$("mergeBar").hidden=cnt<2;$("mergeCnt").textContent="Выбрано строк: "+cnt;return}
   else if(a==="mergeclear"){$("main").querySelectorAll("[data-act=mergechk]:checked").forEach(function(x){x.checked=false});$("mergeBar").hidden=true}
@@ -1373,12 +1558,17 @@ document.addEventListener("keydown",function(ev){
   if(ev.key==="Enter"&&ev.target.classList&&ev.target.classList.contains("row")){if(ev.target.dataset.act==="sopen")openSupplier(ev.target.dataset.id);else openContractor(ev.target.dataset.id)}
 });
 document.addEventListener("input",function(ev){
+  var sdi=ev.target.dataset&&ev.target.dataset.simp;if(sdi&&S.ctx&&S.ctx.simp){S.ctx.simp[+ev.target.dataset.i][sdi]=ev.target.value;return}
   var di=ev.target.dataset&&ev.target.dataset.imp;if(di&&S.ctx&&S.ctx.imp){S.ctx.imp[+ev.target.dataset.i][di]=ev.target.value;return}
   if(ev.target.id==="cmpQ"){S.cmpQ=ev.target.value;var pos=ev.target.selectionStart;render();var ne=$("cmpQ");if(ne){ne.focus();try{ne.setSelectionRange(pos,pos)}catch(e){}}return}
   if(ev.target.id==="q"){S.q=ev.target.value;if(S.tab==="rates")S.tab="people";render()}else if(ev.target.id==="sxq"){S.sxq=ev.target.value;renderSxBody()}});
 document.addEventListener("change",function(ev){var t=ev.target;
   if(t.id==="importFile"&&t.files&&t.files[0]){var rd=new FileReader();rd.onload=function(){try{var j=JSON.parse(rd.result);if(j&&!Array.isArray(j)&&(Array.isArray(j.suppliers)||Array.isArray(j.materials))){openSupplyImport(j);return}var l=Array.isArray(j)?j:j.contractors;if(!Array.isArray(l))throw 0;openFileImport(l)}catch(e){toast("Не удалось прочитать файл. Нужен файл .json, подготовленный для реестра")}};rd.readAsText(t.files[0]);return}
   if(t.id==="xlFile"&&t.files&&t.files[0]){readExcel(t.files[0]);return}
+  if(t.id==="sxlFile"&&t.files&&t.files[0]){readSupExcel(t.files[0]);return}
+  if(t.id==="spdfFile"&&t.files&&t.files[0]){var bx=$("spImport");bx.hidden=false;bx.innerHTML='<p class="hint">Читаю PDF…</p>';pdfText(t.files[0]).then(function(tx){openSupPaste(tx);if(!$("spRes").innerHTML.trim()||!S.ctx.simp||!S.ctx.simp.length)$("spRes").innerHTML='<div class="warnbox">В PDF не нашлось строк с ценой в конце. Если это таблица с несколькими колонками цен, попросите у поставщика тот же прайс в Excel.</div>'}).catch(function(){bx.innerHTML='<div class="warnbox">Не удалось прочитать PDF. Если это скан или фото, вставьте текст вручную или попросите прайс в Excel.</div>'});return}
+  if(t.dataset&&t.dataset.act==="spcol"){S.ctx.sxl.g[t.dataset.key]=+t.value;$("spImport").innerHTML=spSheetUI();return}
+  if(t.dataset&&t.dataset.act==="spsheet"){spPickSheet(+t.value);return}
   if(t.dataset&&t.dataset.act==="xlcol"){S.ctx.xl.g[t.dataset.key]=+t.value;$("fImport").innerHTML=sheetUI();return}
   if(t.dataset&&t.dataset.act==="xlsheet"){xlPickSheet(+t.value);return}
   if(t.id==="cmpAdd"&&t.value){S.cmp.push(t.value);ls("rp.cmp",JSON.stringify(S.cmp));render();return}
