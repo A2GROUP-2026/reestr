@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="robots" content="noindex,nofollow">
 <style>html,body{height:100%;margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
-<title>Реестр подрядчиков</title>
+<title>Реестр подрядчиков и поставщиков</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
 <style>
 /* Layout: sticky bar on top; left rail lists work types in the order a house is built (geodesy -> landscaping); main column is a dense scannable list; one side panel for every form. */
@@ -114,6 +114,8 @@ textarea.inp{resize:vertical;min-height:76px}
 .empty{padding:40px 20px;text-align:center;color:var(--muted)}
 .empty b{display:block;color:var(--ink);font-size:16px;margin-bottom:4px}
 
+.row.sup{grid-template-columns:minmax(0,2.4fr) minmax(0,1.3fr) 90px 158px}
+@media (max-width:900px){.row.sup{grid-template-columns:minmax(0,1fr) auto}.row.sup .r-city{text-align:right}table.mt{min-width:0}table.mt .hm{display:none}table.mt th,table.mt td{padding:9px 10px}}
 /* ---------- rates ---------- */
 .tbl-wrap{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:12px}
 table{border-collapse:collapse;width:100%;min-width:640px}
@@ -187,27 +189,33 @@ tbody tr.rr:hover{background:var(--raise)}
 <body>
 <div id="auth" class="auth">
   <div class="auth-card">
-    <div class="mark"><i></i>Реестр подрядчиков</div>
+    <div class="mark"><i></i>Реестр</div>
     <div id="authBody"><p>Загрузка…</p></div>
   </div>
 </div>
 
 <div id="app" hidden>
   <header class="bar"><div class="bar-in">
-    <div class="mark"><i></i>Реестр подрядчиков</div>
+    <div class="mark"><i></i>Реестр</div>
     <div class="tabs" role="tablist">
       <button class="tab" role="tab" data-act="tab" data-tab="people" aria-selected="true">Подрядчики</button>
       <button class="tab" role="tab" data-act="tab" data-tab="rates" aria-selected="false">Расценки</button>
+      <button class="tab" role="tab" data-act="tab" data-tab="supply" aria-selected="false">Поставщики</button>
     </div>
     <input id="q" class="inp search" type="search" placeholder="Поиск: имя, телефон, город, заметка" autocomplete="off">
     <div class="bar-actions">
-      <button class="btn primary" data-act="add">Добавить</button>
-      <button class="btn" data-act="import">Вставить списком</button>
+      <button class="btn primary" data-act="add" data-for="c">Добавить</button>
+      <button class="btn" data-act="import" data-for="c">Вставить списком</button>
+      <button class="btn primary" data-act="addsup" data-for="s" hidden>Добавить поставщика</button>
+      <button class="btn" data-act="addprice" data-for="s" hidden>Добавить цену</button>
       <div class="menu">
         <button class="btn" data-act="menu" aria-haspopup="true">Ещё</button>
         <div class="menu-list" id="menuList" hidden>
-          <button data-act="addcat">Добавить вид работ</button>
-          <button data-act="importfile">Загрузить подрядчиков из файла</button>
+          <button data-act="addcat" data-for="c">Добавить вид работ</button>
+          <button data-act="importfile" data-for="c">Загрузить подрядчиков из файла</button>
+          <button data-act="addmat" data-for="s" hidden>Добавить материал</button>
+          <button data-act="importfile" data-for="s" hidden>Загрузить поставщиков из файла</button>
+          <button data-act="slog" data-for="s" hidden>Журнал изменений</button>
           <button data-act="export" id="exportBtn">Выгрузить в Excel (CSV)</button>
           <button data-act="passwd">Сменить логин и пароль</button>
           <button data-act="logout">Выйти</button>
@@ -241,7 +249,7 @@ var STATUS={work:"Работаем",reserve:"Резерв",stop:"Не работ
 var FORMS=["","Самозанятый","ИП","ООО","Бригада без оформления"];
 var VATS=["","Без НДС","С НДС"];
 
-var S={open:{},tok:null,sha:null,data:null,dek:null,vault:null,cats:DEFAULT_CATS,list:[],rates:[],tab:"people",q:"",cat:"all",status:"all",city:"",sort:"name",sheet:null,loaded:false,ctx:null};
+var S={open:{},tok:null,sha:null,data:null,dek:null,vault:null,cats:DEFAULT_CATS,list:[],rates:[],tab:"people",q:"",cat:"all",status:"all",city:"",sort:"name",sheet:null,loaded:false,ctx:null,sup:[],mats:[],prs:[],slog:[],mcats:[],supIx:{},matIx:{},sview:"sup",scat:"all",ssort:"name"};
 var $=function(id){return document.getElementById(id)};
 var te=new TextEncoder(),td=new TextDecoder();
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
@@ -291,7 +299,7 @@ function apply(){
   var d=S.data;S.list=Object.keys(d.contractors||{}).map(function(id){return Object.assign({},d.contractors[id],{id:id})});
   S.rates=Object.keys(d.rates||{}).map(function(id){return Object.assign({},d.rates[id],{id:id})}).sort(function(a,b){return (a.order||0)-(b.order||0)});
   if(!S.sheet&&S.rates[0])S.sheet=S.rates[0].id;
-  S.cats=normCats(d.cats&&d.cats.length?d.cats:DEFAULT_CATS);S.loaded=true;render();
+  S.cats=normCats(d.cats&&d.cats.length?d.cats:DEFAULT_CATS);applySupply();S.loaded=true;render();
 }
 async function load(){
   var r=await gh(S.vault.data+"/contents/data.json?t="+Date.now());
@@ -427,6 +435,9 @@ function render(){
   if($("app").hidden)return;
   document.querySelectorAll(".tab").forEach(function(t){t.setAttribute("aria-selected",String(t.dataset.tab===S.tab))});
   $("wrap").classList.toggle("one",S.tab==="rates");$("rail").hidden=S.tab==="rates";
+  var sp=S.tab==="supply";document.querySelectorAll("[data-for]").forEach(function(b){b.hidden=(b.dataset.for==="s")!==sp});
+  $("q").placeholder=sp?"Поиск: поставщик, телефон, материал":"Поиск: имя, телефон, город, заметка";
+  if(sp){renderSupply();return}
   if(S.tab==="rates"){renderRates();return}
   var m=counts(),curStage=S.cat.indexOf("st:")===0?S.cat.slice(3):((catById(S.cat)||{}).stage||"");
   var r='<button class="rail-i" data-act="cat" data-cat="all" aria-current="'+(S.cat==="all")+'"><i></i><span>Все подрядчики</span><b>'+S.list.length+"</b></button>"+
@@ -639,6 +650,231 @@ async function exportCsv(){
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="reestr-podryadchikov-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},5000);
 }
 
+/* ---------- suppliers: suppliers, materials and dated prices live in d.supply inside the same encrypted file ---------- */
+var PT={cash:"Наличные",vat:"С НДС",other:"Не указано"};
+var CHANNELS=["WhatsApp","Telegram","MAX","Звонок","Почта"];
+function sup0(d){if(!d.supply)d.supply={};var s=d.supply;["suppliers","materials","prices"].forEach(function(k){if(!s[k]||typeof s[k]!=="object")s[k]={}});if(!Array.isArray(s.cats))s.cats=[];if(!Array.isArray(s.log))s.log=[];return s}
+function slog(s,a,det){s.log.unshift({t:Date.now(),a:a,d:String(det||"").slice(0,300)});if(s.log.length>300)s.log.length=300}
+function applySupply(){
+  var s=(S.data&&S.data.supply)||{};
+  var arr=function(o){return Object.keys(o||{}).map(function(id){return Object.assign({},o[id],{id:id})})};
+  S.sup=arr(s.suppliers);S.mats=arr(s.materials);S.prs=arr(s.prices);S.slog=s.log||[];
+  var cs={};(s.cats||[]).forEach(function(c){if(c)cs[c]=1});S.sup.forEach(function(x){(x.cats||[]).forEach(function(c){if(c)cs[c]=1})});S.mats.forEach(function(m){if(m.cat)cs[m.cat]=1});
+  S.mcats=Object.keys(cs).sort(function(a,b){return a.localeCompare(b,"ru")});
+  S.supIx={};S.sup.forEach(function(x){S.supIx[x.id]=x});S.matIx={};S.mats.forEach(function(x){S.matIx[x.id]=x});
+}
+function money(n){return Number(n).toLocaleString("ru-RU",{maximumFractionDigits:2})+" ₽"}
+function parseMoney(v){v=String(v||"").replace(/\s|₽|руб\.?/gi,"").replace(",",".");if(!v)return null;var n=Number(v);return isFinite(n)&&n>0?Math.round(n*100)/100:NaN}
+function pText(p){return p.amount!=null?money(p.amount):(String(p.raw||"").split("\n")[0]||"—")}
+function pDate(p){return p.date?new Date(p.date+"T00:00:00").toLocaleDateString("ru-RU"):(p.archive?"архив":"—")}
+function pTime(p){return p.date?Date.parse(p.date+"T00:00:00"):(p.created||0)}
+function matLabel(m){return m?m.name+(m.spec?", "+m.spec:""):"Материал удалён"}
+function byTime(a,b){return pTime(b)-pTime(a)||(b.created||0)-(a.created||0)}
+/* latest price of each supplier for each payment type: what to compare */
+function latest(list){var seen={},out=[];list.slice().sort(byTime).forEach(function(p){var k=p.sup+"|"+p.mat+"|"+p.type;if(!seen[k]){seen[k]=1;out.push(p)}});return out}
+function minOf(list,type){var b=null;list.forEach(function(p){if(p.type===type&&p.amount!=null&&(!b||p.amount<b.amount))b=p});return b}
+function supCatCounts(){var m={none:0};S.sup.forEach(function(x){var c=x.cats||[];if(!c.length)m.none++;c.forEach(function(k){m[k]=(m[k]||0)+1})});return m}
+function matCatCounts(){var m={none:0};S.mats.forEach(function(x){if(x.cat)m[x.cat]=(m[x.cat]||0)+1;else m.none++});return m}
+
+function supFiltered(){
+  var q=norm(S.q).trim(),qd=q.replace(/\D/g,"");
+  var arr=S.sup.filter(function(x){
+    if(S.scat==="none"){if((x.cats||[]).length)return false}else if(S.scat!=="all"&&(x.cats||[]).indexOf(S.scat)<0)return false;
+    if(q){var mats=S.prs.filter(function(p){return p.sup===x.id}).map(function(p){return matLabel(S.matIx[p.mat])}).join(" ");
+      var hay=norm([x.name,x.note,(x.cats||[]).join(" "),(x.channels||[]).join(" "),mats].join(" "));var hit=hay.indexOf(q)>=0;
+      if(!hit&&qd.length>=3)hit=(x.phones||[]).some(function(p){return p.indexOf(qd)>=0});if(!hit)return false}
+    return true});
+  arr.sort(function(a,b){return S.ssort==="new"?(b.updated||0)-(a.updated||0):norm(a.name).localeCompare(norm(b.name),"ru")});
+  return arr;
+}
+function matFiltered(){
+  var q=norm(S.q).trim();
+  return S.mats.filter(function(m){
+    if(S.scat==="none"){if(m.cat)return false}else if(S.scat!=="all"&&m.cat!==S.scat)return false;
+    if(q){var who=S.prs.filter(function(p){return p.mat===m.id}).map(function(p){var x=S.supIx[p.sup];return x?x.name:""}).join(" ");
+      if(norm([m.name,m.spec,m.cat,m.unit,who].join(" ")).indexOf(q)<0)return false}
+    return true});
+}
+
+function renderSupply(){
+  var mv=S.sview==="mat",m=mv?matCatCounts():supCatCounts(),total=mv?S.mats.length:S.sup.length,what=mv?"Все материалы":"Все поставщики";
+  var r='<button class="rail-i" data-act="scat" data-cat="all" aria-current="'+(S.scat==="all")+'"><i></i><span>'+what+"</span><b>"+total+"</b></button>"+
+    (m.none?'<button class="rail-i" data-act="scat" data-cat="none" aria-current="'+(S.scat==="none")+'"><i></i><span>Без категории</span><b>'+m.none+"</b></button>":"")+"<hr>";
+  var opts='<option value="all">'+what+" ("+total+")</option>"+(m.none?'<option value="none"'+(S.scat==="none"?" selected":"")+">Без категории ("+m.none+")</option>":"");
+  S.mcats.forEach(function(c){var n=m[c]||0;r+='<button class="rail-i'+(n?"":" zero")+'" data-act="scat" data-cat="'+esc(c)+'" aria-current="'+(S.scat===c)+'"><i class="dot" style="background:var(--s'+(1+S.mcats.indexOf(c)%8)+')"></i><span>'+esc(c)+"</span><b>"+n+"</b></button>";
+    opts+='<option value="'+esc(c)+'"'+(S.scat===c?" selected":"")+">"+esc(c)+" ("+n+")</option>"});
+  $("rail").innerHTML=r;
+  var cur=S.scat==="all"?what:S.scat==="none"?"Без категории":S.scat;
+  var list=mv?matFiltered():supFiltered();
+  var h='<div class="tools"><h2>'+esc(cur)+"<small>"+(S.loaded?"Показано "+list.length+" из "+total:"Загружаю…")+"</small></h2>"+
+    '<select class="inp rail-select" id="scatSel" aria-label="Категория">'+opts+"</select>"+
+    (mv?"":'<select class="inp" id="ssortSel" aria-label="Сортировка"><option value="name"'+(S.ssort!=="new"?" selected":"")+'>По названию</option><option value="new"'+(S.ssort==="new"?" selected":"")+">Недавно изменённые</option></select>")+"</div>";
+  h+='<div class="seg"><button class="pill" data-act="sview" data-v="sup" aria-pressed="'+!mv+'">Поставщики</button><button class="pill" data-act="sview" data-v="mat" aria-pressed="'+mv+'">Материалы и цены</button></div>';
+  if(!S.sup.length&&!S.mats.length){
+    h+='<div class="list"><div class="empty"><b>Поставщиков пока нет</b>Загрузите файл registry-seed.json из комплекта старого реестра или добавьте поставщика вручную.<div class="btnrow" style="justify-content:center;margin-top:14px"><button class="btn primary" data-act="importfile">Загрузить из файла</button><button class="btn" data-act="addsup">Добавить поставщика</button></div></div></div>';
+    $("main").innerHTML=h;return}
+  if(!mv){
+    if(!list.length)h+='<div class="list"><div class="empty"><b>Никого не найдено</b>Измените поиск или категорию.</div></div>';
+    else h+='<div class="list"><div class="row head sup"><div>Поставщик</div><div>Категории</div><div>Цены</div><div class="r-phones">Телефон</div></div>'+list.map(function(x){
+      var cs=x.cats||[],phs=x.phones||[],n=S.prs.filter(function(p){return p.sup===x.id}).length;
+      var cats=cs.length?'<i class="dot" style="background:var(--s'+(1+Math.max(0,S.mcats.indexOf(cs[0]))%8)+')"></i><span>'+esc(cs[0])+"</span>"+(cs.length>1?"<em>+"+(cs.length-1)+"</em>":""):'<span class="r-sub">не указаны</span>';
+      var ph=phs.length?'<button type="button" class="tap" data-act="copy" data-v="'+fmtPhone(phs[0])+'" title="Нажмите, чтобы скопировать">'+fmtPhone(phs[0])+"</button>"+(phs.length>1?"<em>+"+(phs.length-1)+"</em>":""):'<span class="r-sub">нет телефона</span>';
+      return '<div class="row sup" data-act="sopen" data-id="'+esc(x.id)+'" tabindex="0" role="button"><div class="r-name" title="'+esc(x.name+(x.note?" — "+x.note:""))+'"><b>'+esc(x.name)+"</b>"+(x.note?"<span>"+esc(x.note)+"</span>":"")+'</div><div class="r-types" title="'+esc(cs.join(", "))+'">'+cats+'</div><div class="r-city">'+(n?"цен: "+n:"")+'</div><div class="r-phones">'+ph+"</div></div>"}).join("")+"</div>";
+  } else {
+    var groups={};list.forEach(function(x){var k=x.cat||"";(groups[k]=groups[k]||[]).push(x)});
+    var keys=Object.keys(groups).sort(function(a,b){return !a?1:!b?-1:a.localeCompare(b,"ru")});
+    if(!list.length)h+='<div class="list"><div class="empty"><b>Ничего не найдено</b>Измените поиск или категорию.</div></div>';
+    else{h+='<div class="tbl-wrap"><table class="mt"><thead><tr><th>Материал</th><th class="hm">Ед.</th><th class="num">Наличные от</th><th class="num">С НДС от</th><th class="num hm">Поставщики</th></tr></thead><tbody>';
+      keys.forEach(function(k){h+='<tr class="sec"><td colspan="5">'+esc(k||"Без категории")+'<button class="btn small" data-act="addmat" data-cat="'+esc(k)+'">Добавить материал</button></td></tr>';
+        groups[k].sort(function(a,b){return norm(a.name+" "+(a.spec||"")).localeCompare(norm(b.name+" "+(b.spec||"")),"ru",{numeric:true})}).forEach(function(x){
+          var ps=latest(S.prs.filter(function(p){return p.mat===x.id})),c=minOf(ps,"cash"),v=minOf(ps,"vat"),who={};ps.forEach(function(p){who[p.sup]=1});var nw=Object.keys(who).length;
+          h+='<tr class="rr" data-act="mopen" data-id="'+esc(x.id)+'"><td>'+esc(x.name)+(x.spec?' <span class="r-sub">'+esc(x.spec)+"</span>":"")+"</td><td class=\"hm\">"+esc(x.unit||"")+'</td><td class="num mono">'+(c?money(c.amount):"—")+'</td><td class="num mono">'+(v?money(v.amount):"—")+'</td><td class="num hm">'+(nw?'<span class="cnt">'+nw+"</span>":"—")+"</td></tr>"})});
+      h+="</tbody></table></div>"}
+  }
+  $("main").innerHTML=h;
+}
+
+function phoneLinks(phs){return (phs||[]).map(function(p){return '<div class="phone mono">'+fmtPhone(p)+' <button type="button" class="copy" data-act="copy" data-v="'+fmtPhone(p)+'">Копировать</button> <a class="copy" target="_blank" rel="noopener" href="https://wa.me/'+p+'">WhatsApp</a> <a class="copy" target="_blank" rel="noopener" href="https://t.me/+'+p+'">Telegram</a></div>'}).join("")}
+function priceLine(p,withSup){
+  var who=withSup?(S.supIx[p.sup]||{name:"Поставщик удалён"}).name:matLabel(S.matIx[p.mat]);
+  var tl=PT[p.type]||PT.other,meta=[tl,p.payment&&norm(p.payment)!==norm(tl)?"оплата: "+p.payment:"",p.delivery?"доставка: "+p.delivery:"",pDate(p)].filter(Boolean).join(" · ");
+  return '<div class="quote"><span>'+(withSup?'<button type="button" class="linkish" data-act="sopen" data-id="'+esc(p.sup)+'">'+esc(who)+"</button>":esc(who))+'<br><span class="r-sub">'+esc(meta)+"</span>"+(p.raw&&p.amount!=null&&String(p.raw).replace(/\s/g,"")!==String(p.amount)?'<br><span class="r-sub" style="white-space:pre-line">'+esc(p.raw)+"</span>":"")+'</span><span style="display:flex;gap:6px;align-items:flex-start"><b class="mono" style="font-weight:500;white-space:nowrap">'+esc(pText(p))+'</b><button type="button" class="btn ghost small" data-act="spdel" data-id="'+esc(p.id)+'" aria-label="Удалить цену">×</button></span></div>';
+}
+function catChips(sel){return '<div class="chips" id="fCats">'+S.mcats.map(function(c){return '<label class="tog"><input type="checkbox" name="scat" value="'+esc(c)+'"'+(sel.indexOf(c)>=0?" checked":"")+"><span>"+esc(c)+"</span></label>"}).join("")+"</div>"}
+
+function openSupplier(id){
+  var x=id?S.supIx[id]:null;if(id&&!x)return;
+  var d=x||{name:"",phones:[],cats:S.scat!=="all"&&S.scat!=="none"?[S.scat]:[],channels:[],note:""};
+  var ps=x?S.prs.filter(function(p){return p.sup===id}).sort(function(a,b){return norm(matLabel(S.matIx[a.mat])).localeCompare(norm(matLabel(S.matIx[b.mat])),"ru")||byTime(a,b)}):[];
+  var body=(x?'<div style="display:flex;flex-direction:column;gap:6px">'+phoneLinks(d.phones)+"</div>":"")+
+    '<label class="field"><span>Название</span><input class="inp" id="fName" required value="'+esc(d.name)+'" placeholder="Металлобаза на Ростовском шоссе"></label>'+
+    '<label class="field"><span>Телефоны</span><input class="inp mono" id="fPhones" inputmode="tel" value="'+esc((d.phones||[]).map(fmtPhone).join(", "))+'" placeholder="+7 918 000-00-00"></label>'+
+    '<div class="field"><span>Каналы связи</span><div class="chips">'+CHANNELS.map(function(c){return '<label class="tog"><input type="checkbox" name="sch" value="'+c+'"'+((d.channels||[]).indexOf(c)>=0?" checked":"")+"><span>"+c+"</span></label>"}).join("")+"</div></div>"+
+    '<div class="field"><span>Категории материалов</span>'+catChips(d.cats||[])+'<input class="inp" id="fNewCat" placeholder="Новая категория, если нужной нет"></div>'+
+    '<label class="field"><span>Заметка</span><textarea class="inp" id="fNote" placeholder="Условия, менеджер, что важно знать">'+esc(d.note||"")+"</textarea></label>"+
+    (x?'<div class="field"><span>Цены поставщика ('+ps.length+')</span>'+(ps.length?ps.map(function(p){return priceLine(p,false)}).join(""):'<p class="hint">Цен пока нет.</p>')+'<div class="btnrow"><button type="button" class="btn small" data-act="addprice" data-sup="'+esc(id)+'">Добавить цену</button></div></div>':"")+
+    '<div id="fWarn"></div>';
+  var foot=(x?'<button type="button" class="btn danger" data-act="del">Удалить</button>':"<span></span>")+'<button class="btn primary" id="pSave">Сохранить</button>';
+  openPanel(x?x.name:"Новый поставщик",body,foot,{nofocus:!!x,dupOk:false,delArmed:false,sdel:x?async function(){await mutate(function(dd){var s=sup0(dd);delete s.suppliers[id];Object.keys(s.prices).forEach(function(k){if(s.prices[k].sup===id)delete s.prices[k]});slog(s,"Удалён поставщик",x.name)})}:null,submit:async function(){
+    var name=$("fName").value.trim();if(!name){$("fName").focus();return}
+    var phones=parsePhones($("fPhones").value);
+    if($("fPhones").value.trim()&&!phones.length){$("fWarn").innerHTML='<div class="warnbox">Не удалось разобрать номер телефона. Проверьте его.</div>';return}
+    if(!S.ctx.dupOk){var dup=S.sup.filter(function(y){return y.id!==id&&((y.phones||[]).some(function(p){return phones.indexOf(p)>=0})||norm(y.name)===norm(name))});
+      if(dup.length){S.ctx.dupOk=true;$("fWarn").innerHTML='<div class="warnbox">Похожий поставщик уже есть: '+esc(dup.map(function(y){return y.name}).join(", "))+". Нажмите «Сохранить» ещё раз, если это не ошибка.</div>";return}}
+    var cats=Array.from($("panel").querySelectorAll("[name=scat]:checked")).map(function(i){return i.value}),nc=$("fNewCat").value.trim();
+    if(nc){var ex=S.mcats.filter(function(c){return norm(c)===norm(nc)})[0];nc=ex||nc;if(cats.indexOf(nc)<0)cats.push(nc)}
+    var o={name:name,phones:phones,channels:Array.from($("panel").querySelectorAll("[name=sch]:checked")).map(function(i){return i.value}),cats:cats,note:$("fNote").value.trim(),created:(x&&x.created)||Date.now(),updated:Date.now()};
+    $("pSave").disabled=true;var nid=id||newId();
+    try{await mutate(function(dd){var s=sup0(dd);s.suppliers[nid]=o;if(nc&&s.cats.indexOf(nc)<0)s.cats.push(nc);slog(s,x?"Изменён поставщик":"Добавлен поставщик",name)});closePanel();toast("Сохранено")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
+  }});
+}
+
+function openMaterial(id,cat){
+  var x=id?S.matIx[id]:null;if(id&&!x)return;
+  var d=x||{cat:cat||(S.scat!=="all"&&S.scat!=="none"?S.scat:""),name:"",spec:"",unit:""};
+  var all=x?S.prs.filter(function(p){return p.mat===id}).sort(byTime):[],cur=latest(all),old=all.filter(function(p){return cur.indexOf(p)<0});
+  cur.sort(function(a,b){return (a.amount==null)-(b.amount==null)||(a.type===b.type?(a.amount||0)-(b.amount||0):a.type.localeCompare(b.type))});
+  var body='<div class="grid2"><label class="field"><span>Категория</span><input class="inp" id="mCat" list="mCatDl" value="'+esc(d.cat||"")+'" required><datalist id="mCatDl">'+S.mcats.map(function(c){return '<option value="'+esc(c)+'">'}).join("")+'</datalist></label><label class="field"><span>Ед. изм.</span><input class="inp" id="mUnit" value="'+esc(d.unit||"")+'" placeholder="м³, т, шт."></label></div>'+
+    '<label class="field"><span>Материал</span><input class="inp" id="mName" required value="'+esc(d.name)+'" placeholder="Арматура"></label>'+
+    '<label class="field"><span>Характеристики</span><input class="inp" id="mSpec" value="'+esc(d.spec||"")+'" placeholder="12 мм, А500"></label>'+
+    (x?'<div class="field"><span>Актуальные цены ('+cur.length+')</span>'+(cur.length?cur.map(function(p){return priceLine(p,true)}).join(""):'<p class="hint">Цен пока нет.</p>')+'<div class="btnrow"><button type="button" class="btn small" data-act="addprice" data-mat="'+esc(id)+'">Добавить цену</button></div></div>'+
+      (old.length?'<details class="field"><summary class="hint" style="cursor:pointer">История цен ('+old.length+")</summary>"+old.map(function(p){return priceLine(p,true)}).join("")+"</details>":""):"");
+  var foot=(x?'<button type="button" class="btn danger" data-act="del">Удалить</button>':"<span></span>")+'<button class="btn primary" id="pSave">Сохранить</button>';
+  openPanel(x?matLabel(x):"Новый материал",body,foot,{nofocus:!!x,delArmed:false,sdel:x?async function(){await mutate(function(dd){var s=sup0(dd);delete s.materials[id];Object.keys(s.prices).forEach(function(k){if(s.prices[k].mat===id)delete s.prices[k]});slog(s,"Удалён материал",matLabel(x))})}:null,submit:async function(){
+    var n=$("mName").value.trim(),c=$("mCat").value.trim();if(!c){$("mCat").focus();return}if(!n){$("mName").focus();return}
+    var ex=S.mcats.filter(function(k){return norm(k)===norm(c)})[0];c=ex||c;
+    var o={cat:c,name:n,spec:$("mSpec").value.trim(),unit:$("mUnit").value.trim()};
+    $("pSave").disabled=true;var nid=id||newId();
+    try{await mutate(function(dd){var s=sup0(dd);s.materials[nid]=o;if(s.cats.indexOf(c)<0)s.cats.push(c);slog(s,x?"Изменён материал":"Добавлен материал",c+": "+matLabel(o))});closePanel();toast("Сохранено")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
+  }});
+}
+
+function openPrice(pre){
+  pre=pre||{};
+  if(!S.sup.length){toast("Сначала добавьте поставщика");return}
+  var sups=S.sup.slice().sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")});
+  var groups={};S.mats.forEach(function(m){(groups[m.cat||"Без категории"]=groups[m.cat||"Без категории"]||[]).push(m)});
+  var mopts='<option value="">Выберите материал</option>'+Object.keys(groups).sort(function(a,b){return a.localeCompare(b,"ru")}).map(function(g){return '<optgroup label="'+esc(g)+'">'+groups[g].sort(function(a,b){return norm(matLabel(a)).localeCompare(norm(matLabel(b)),"ru",{numeric:true})}).map(function(m){return '<option value="'+esc(m.id)+'"'+(pre.mat===m.id?" selected":"")+">"+esc(matLabel(m))+(m.unit?" ("+esc(m.unit)+")":"")+"</option>"}).join("")+"</optgroup>"}).join("")+'<option value="new">+ Новый материал</option>';
+  var body='<label class="field"><span>Поставщик</span><select class="inp" id="qSup"><option value="">Выберите поставщика</option>'+sups.map(function(x){return '<option value="'+esc(x.id)+'"'+(pre.sup===x.id?" selected":"")+">"+esc(x.name)+"</option>"}).join("")+"</select></label>"+
+    '<label class="field"><span>Материал</span><select class="inp" id="qMat">'+mopts+"</select></label>"+
+    '<div id="qNew" hidden><div class="grid2"><label class="field"><span>Категория</span><input class="inp" id="mCat" list="mCatDl2"><datalist id="mCatDl2">'+S.mcats.map(function(c){return '<option value="'+esc(c)+'">'}).join("")+'</datalist></label><label class="field"><span>Ед. изм.</span><input class="inp" id="mUnit" placeholder="м³, т, шт."></label></div>'+
+      '<div class="grid2" style="margin-top:14px"><label class="field"><span>Материал</span><input class="inp" id="mName"></label><label class="field"><span>Характеристики</span><input class="inp" id="mSpec"></label></div></div>'+
+    '<div class="grid2"><label class="field"><span>Цена наличными, ₽</span><input class="inp mono" id="qCash" inputmode="decimal"></label><label class="field"><span>Цена с НДС, ₽</span><input class="inp mono" id="qVat" inputmode="decimal"></label></div>'+
+    '<div class="grid2"><label class="field"><span>Доставка</span><input class="inp" id="qDel" placeholder="5 000 ₽, бесплатно от 10 т"></label><label class="field"><span>Дата цены</span><input class="inp" id="qDate" type="date" value="'+new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10)+'"></label></div>'+
+    '<label class="field"><span>Комментарий</span><textarea class="inp" id="qRaw" placeholder="Условия, объём, наличие"></textarea></label><div id="fWarn"></div>';
+  openPanel("Новая цена",body,'<span></span><button class="btn primary" id="pSave">Сохранить</button>',{nofocus:true,submit:async function(){
+    var w=function(t){$("fWarn").innerHTML='<div class="warnbox">'+t+"</div>"};
+    var sid=$("qSup").value,mid=$("qMat").value,cash=parseMoney($("qCash").value),vat=parseMoney($("qVat").value);
+    if(!sid){w("Выберите поставщика.");return}if(!mid){w("Выберите материал.");return}
+    var nm=null;if(mid==="new"){var c=$("mCat").value.trim(),n=$("mName").value.trim();if(!c||!n){w("Для нового материала укажите категорию и название.");return}
+      var ex=S.mcats.filter(function(k){return norm(k)===norm(c)})[0];nm={cat:ex||c,name:n,spec:$("mSpec").value.trim(),unit:$("mUnit").value.trim()}}
+    if(isNaN(cash)||isNaN(vat)){w("Цена должна быть числом, например 18900 или 31994,66.");return}
+    if(cash==null&&vat==null){w("Укажите хотя бы одну цену: наличными или с НДС.");return}
+    var date=$("qDate").value||"",del=$("qDel").value.trim(),raw=$("qRaw").value.trim(),now=Date.now();
+    $("pSave").disabled=true;
+    try{await mutate(function(dd){var s=sup0(dd),m=mid;if(nm){m=newId();s.materials[m]=nm;if(s.cats.indexOf(nm.cat)<0)s.cats.push(nm.cat)}
+        [["cash",cash,"Наличные"],["vat",vat,"С НДС"]].forEach(function(t,i){if(t[1]==null)return;s.prices[newId()]={sup:sid,mat:m,amount:t[1],type:t[0],payment:t[2],delivery:del,date:date,raw:raw,src:"Вручную",created:now+i}});
+        if(s.suppliers[sid])s.suppliers[sid].updated=now;
+        slog(s,"Добавлена цена",((s.suppliers[sid]||{}).name||"")+" — "+matLabel(nm||s.materials[m])+": "+[cash!=null?"нал. "+money(cash):"",vat!=null?"НДС "+money(vat):""].filter(Boolean).join(", "))});
+      closePanel();toast("Цена сохранена")}catch(e){$("pSave").disabled=false;toast(failMsg(e))}
+  }});
+}
+async function delPrice(pid){
+  var p=S.prs.filter(function(x){return x.id===pid})[0];if(!p)return;
+  await mutate(function(dd){var s=sup0(dd);delete s.prices[pid];slog(s,"Удалена цена",((S.supIx[p.sup]||{}).name||"")+" — "+matLabel(S.matIx[p.mat])+": "+pText(p))});
+}
+
+/* import of registry-seed.json (old supplier registry): {source, suppliers[], materials[], prices[]} */
+function openSupplyImport(j){
+  var str=function(v,n){return v==null?"":String(v).slice(0,n||2000).trim()};
+  var have={},haveName={};S.sup.forEach(function(x){(x.phones||[]).forEach(function(p){have[p]=x.id});haveName[norm(x.name)]=x.id});
+  var haveMat={};S.mats.forEach(function(m){haveMat[norm(m.cat+"|"+m.name+"|"+(m.spec||""))]=m.id});
+  var sups=(j.suppliers||[]).filter(function(x){return x&&typeof x==="object"}).map(function(x){
+    var phones=[];[x.phone1,x.phone2].concat(Array.isArray(x.phones)?x.phones:[]).forEach(function(p){if(!p)return;var d=normPhone(p);if(d.length===11&&phones.indexOf(d)<0)phones.push(d)});
+    var o={key:x.id,name:str(x.name,200)||"Без названия",phones:phones,cats:(Array.isArray(x.categories)?x.categories:[]).map(function(c){return str(c,80)}).filter(Boolean),
+      channels:(Array.isArray(x.channels)?x.channels:[]).map(function(c){return str(c,40)}).filter(Boolean),note:str(x.notes,2000)};
+    o.dup=phones.map(function(p){return have[p]}).filter(Boolean)[0]||haveName[norm(o.name)]||"";return o});
+  var mats=(j.materials||[]).filter(function(x){return x&&typeof x==="object"}).map(function(x){
+    var o={key:x.id,cat:str(x.category,80)||"Не определено",name:str(x.name,200)||"Без названия",spec:str(x.spec,200),unit:str(x.unit,40)};if(o.unit==="—")o.unit="";
+    o.dup=haveMat[norm(o.cat+"|"+o.name+"|"+o.spec)]||"";return o});
+  var supKey={},matKey={};sups.forEach(function(x){supKey[x.key]=x});mats.forEach(function(x){matKey[x.key]=x});
+  var prices=(j.prices||[]).filter(function(p){return p&&supKey[p.supplierId]&&matKey[p.materialId]}).map(function(p){
+    var dt=str(p.priceDate,40),iso=/^\d{4}-\d{2}-\d{2}/.test(dt)?dt.slice(0,10):"",amt=p.amount==null||p.amount===""?null:Number(p.amount);
+    var del=str(p.delivery,200);if(/^заполнить$/i.test(del))del="";
+    return {sup:p.supplierId,mat:p.materialId,amount:isFinite(amt)&&amt!==null?amt:null,type:p.priceType==="cash"||p.priceType==="vat"?p.priceType:"other",payment:str(p.payment,200),delivery:del,date:iso,archive:!iso,raw:str(p.rawValue,1000),src:str(p.source,40)||"Импорт"}});
+  var ns=sups.filter(function(x){return !x.dup}).length,nm=mats.filter(function(x){return !x.dup}).length;
+  if(!sups.length&&!mats.length){toast("В файле нет поставщиков и материалов");return}
+  openPanel("Загрузка поставщиков",
+    '<p class="hint">Файл: '+esc(str(j.source,200)||"registry-seed.json")+'. Поставщики с тем же номером или названием и уже существующие материалы не дублируются: цены из файла привяжутся к ним.</p>'+
+    '<div class="field"><span>Будет добавлено</span><div class="quote"><span>Поставщики</span><b>'+ns+" из "+sups.length+'</b></div><div class="quote"><span>Материалы</span><b>'+nm+" из "+mats.length+'</b></div><div class="quote"><span>Цены</span><b>'+prices.length+"</b></div></div>"+
+    (prices.some(function(p){return p.archive})?'<p class="hint">Цены без даты будут помечены как «архив».</p>':"")+
+    '<details class="field"><summary class="hint" style="cursor:pointer">Список поставщиков</summary>'+sups.map(function(x){return '<div class="quote"><span>'+esc(x.name)+(x.dup?' <span class="r-sub">уже есть</span>':' <span class="r-sub">'+esc(x.cats.join(", "))+"</span>")+'</span><span class="mono">'+x.phones.map(fmtPhone).join(", ")+"</span></div>"}).join("")+"</details>",
+    '<span></span><button class="btn primary" id="pSave">Загрузить</button>',
+    {nofocus:true,submit:async function(){$("pSave").disabled=true;var now=Date.now();
+      try{await mutate(function(dd){var s=sup0(dd),sid={},mid={},i=0;
+          sups.forEach(function(x){if(x.dup&&s.suppliers[x.dup]){sid[x.key]=x.dup;return}var id=newId();sid[x.key]=id;s.suppliers[id]={name:x.name,phones:x.phones,channels:x.channels,cats:x.cats,note:x.note,created:now,updated:now+(i++)};x.cats.forEach(function(c){if(s.cats.indexOf(c)<0)s.cats.push(c)})});
+          mats.forEach(function(x){if(x.dup&&s.materials[x.dup]){mid[x.key]=x.dup;return}var id=newId();mid[x.key]=id;s.materials[id]={cat:x.cat,name:x.name,spec:x.spec,unit:x.unit};if(s.cats.indexOf(x.cat)<0)s.cats.push(x.cat)});
+          prices.forEach(function(p,k){var o=Object.assign({},p,{sup:sid[p.sup],mat:mid[p.mat],created:now+k});if(!o.archive)delete o.archive;s.prices[newId()]=o});
+          slog(s,"Загрузка из файла",(str(j.source,120)||"registry-seed.json")+": поставщиков "+ns+", материалов "+nm+", цен "+prices.length)});
+        S.tab="supply";closePanel();toast("Загружено: поставщиков "+ns+", материалов "+nm+", цен "+prices.length)}
+      catch(e){$("pSave").disabled=false;toast(failMsg(e))}}});
+}
+function openSupplyLog(){
+  var l=S.slog||[];
+  openPanel("Журнал: поставщики",l.length?l.map(function(e){return '<div class="quote"><span>'+esc(e.a)+'<br><span class="r-sub">'+esc(e.d)+'</span></span><span class="r-sub" style="white-space:nowrap">'+new Date(e.t).toLocaleString("ru-RU",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"})+"</span></div>"}).join(""):'<p class="hint">Изменений пока не было.</p>',"<span></span>",{nofocus:true});
+}
+function exportSupplyCsv(){
+  var cell=function(v){v=String(v==null?"":v);return /[";\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  var rows=[["Поставщик","Телефоны","Каналы связи","Категории","Заметка","Категория материала","Материал","Характеристики","Ед.","Цена, ₽","Тип цены","Условия оплаты","Доставка","Дата","Комментарий"]];
+  S.sup.slice().sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")}).forEach(function(x){
+    var base=[x.name,(x.phones||[]).map(fmtPhone).join(", "),(x.channels||[]).join(", "),(x.cats||[]).join(", "),x.note];
+    var ps=S.prs.filter(function(p){return p.sup===x.id}).sort(byTime);
+    if(!ps.length){rows.push(base.concat(["","","","","","","","","",""]));return}
+    ps.forEach(function(p){var m=S.matIx[p.mat]||{};rows.push(base.concat([m.cat,m.name,m.spec,m.unit,p.amount!=null?String(p.amount).replace(".",","):"",PT[p.type]||PT.other,p.payment,p.delivery,pDate(p),p.raw]))})});
+  var csv="﻿"+rows.map(function(r){return r.map(cell).join(";")}).join("\r\n");
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8"}));a.download="reestr-postavshchikov-"+new Date().toISOString().slice(0,10)+".csv";document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(a.href)},5000);
+}
+
 /* ---------- events ---------- */
 document.addEventListener("click",async function(ev){
   var menu=$("menuList");
@@ -660,15 +896,23 @@ document.addEventListener("click",async function(ev){
   else if(a==="addcat"){openAddCat()}
   else if(a==="importfile"){var fi=$("importFile");fi.value="";fi.click()}
   else if(a==="passwd"){openPasswd()}
-  else if(a==="export"){exportCsv()}
+  else if(a==="export"){if(S.tab==="supply")exportSupplyCsv();else exportCsv()}
   else if(a==="genpass"){var al="abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789",o="",rv=rnd(20);for(var gi=0;gi<20;gi++)o+=al[rv[gi]%al.length];$("password").value=o.replace(/(.{5})(?=.)/g,"$1-")}
   else if(a==="logout"){ls("rp.dek",null);location.reload()}
   else if(a==="close"){closePanel()}
   else if(a==="rate"){var box=$("fRating"),n=+el.dataset.n;if(+box.dataset.v===n)n=0;box.dataset.v=n;box.querySelectorAll("button").forEach(function(b){b.classList.toggle("on",+b.dataset.n<=n)})}
-  else if(a==="addprice"){$("fPrices").insertAdjacentHTML("beforeend",priceRowHtml({}));var ins=$("fPrices").querySelectorAll('[name=pw]');ins[ins.length-1].focus()}
   else if(a==="delprice"){el.closest(".price-row").remove();if(!$("fPicker").hidden)$("fPicker").innerHTML=pickerHtml()}
   else if(a==="pickprice"){var pk=$("fPicker");pk.hidden=!pk.hidden;if(!pk.hidden){pk.innerHTML=pickerHtml();pk.scrollIntoView({block:"nearest"})}}
   else if(a==="pickwork"){$("fPrices").insertAdjacentHTML("beforeend",priceRowHtml({work:el.dataset.w}));el.disabled=true;var pi=$("fPrices").querySelectorAll('[name=pp]');pi[pi.length-1].focus()}
+  else if(a==="scat"){S.scat=el.dataset.cat;render()}
+  else if(a==="sview"){S.sview=el.dataset.v;S.scat="all";render()}
+  else if(a==="sopen"){ev.stopPropagation();openSupplier(el.dataset.id)}
+  else if(a==="mopen"){openMaterial(el.dataset.id)}
+  else if(a==="addsup"){openSupplier(null)}
+  else if(a==="addmat"){openMaterial(null,el.dataset.cat)}
+  else if(a==="addprice"){if(el.closest("#panel")&&!el.closest("#fPrices")&&(el.dataset.sup||el.dataset.mat)){openPrice({sup:el.dataset.sup,mat:el.dataset.mat})}else if(!el.closest("#panel")){openPrice({})}else{$("fPrices").insertAdjacentHTML("beforeend",priceRowHtml({}));var ins0=$("fPrices").querySelectorAll('[name=pw]');ins0[ins0.length-1].focus()}}
+  else if(a==="spdel"){ev.stopPropagation();if(el.dataset.armed!=="1"){el.dataset.armed="1";el.textContent="Удалить?";return}el.disabled=true;var back=S.ctx;try{await delPrice(el.dataset.id);toast("Цена удалена");if(back&&back.reopen)back.reopen();else el.closest(".quote").remove()}catch(e){el.disabled=false;toast(failMsg(e))}}
+  else if(a==="slog"){openSupplyLog()}
   else if(a==="raterow"){ev.stopPropagation();openRateRow(+el.dataset.s,+el.dataset.r)}
   else if(a==="del"){
     if(!S.ctx)return;
@@ -676,18 +920,19 @@ document.addEventListener("click",async function(ev){
     el.disabled=true;
     try{
       if(S.ctx.rate){var sh=JSON.parse(JSON.stringify(S.rates.filter(function(x){return x.id===S.sheet})[0]||S.rates[0]));sh.sections[S.ctx.rate.si].rows.splice(S.ctx.rate.ri,1);await putSheet(sh)}
+      else if(S.ctx.sdel){await S.ctx.sdel()}
       else if(S.ctx.id){var did=S.ctx.id;await mutate(function(d){delete d.contractors[did]})}
       closePanel();toast("Удалено")}catch(e){el.disabled=false;toast(failMsg(e))}
   }
 });
 document.addEventListener("keydown",function(ev){
   if(ev.key==="Escape"&&!$("scrim").hidden)closePanel();
-  if(ev.key==="Enter"&&ev.target.classList&&ev.target.classList.contains("row"))openContractor(ev.target.dataset.id);
+  if(ev.key==="Enter"&&ev.target.classList&&ev.target.classList.contains("row")){if(ev.target.dataset.act==="sopen")openSupplier(ev.target.dataset.id);else openContractor(ev.target.dataset.id)}
 });
-document.addEventListener("input",function(ev){if(ev.target.id==="q"){S.q=ev.target.value;if(S.tab!=="people")S.tab="people";render()}});
+document.addEventListener("input",function(ev){if(ev.target.id==="q"){S.q=ev.target.value;if(S.tab==="rates")S.tab="people";render()}});
 document.addEventListener("change",function(ev){var t=ev.target;
-  if(t.id==="importFile"&&t.files&&t.files[0]){var rd=new FileReader();rd.onload=function(){try{var j=JSON.parse(rd.result);var l=Array.isArray(j)?j:j.contractors;if(!Array.isArray(l))throw 0;openFileImport(l)}catch(e){toast("Не удалось прочитать файл. Нужен файл .json, подготовленный для реестра")}};rd.readAsText(t.files[0]);return}
-  if(t.id==="catSel"){S.cat=t.value;var ck2=catById(S.cat);if(ck2)S.open[ck2.stage]=true;else if(S.cat.indexOf("st:")===0)S.open[S.cat.slice(3)]=true;render()}else if(t.id==="citySel"){S.city=t.value;render()}else if(t.id==="sortSel"){S.sort=t.value;render()}});
+  if(t.id==="importFile"&&t.files&&t.files[0]){var rd=new FileReader();rd.onload=function(){try{var j=JSON.parse(rd.result);if(j&&!Array.isArray(j)&&(Array.isArray(j.suppliers)||Array.isArray(j.materials))){openSupplyImport(j);return}var l=Array.isArray(j)?j:j.contractors;if(!Array.isArray(l))throw 0;openFileImport(l)}catch(e){toast("Не удалось прочитать файл. Нужен файл .json, подготовленный для реестра")}};rd.readAsText(t.files[0]);return}
+  if(t.id==="catSel"){S.cat=t.value;var ck2=catById(S.cat);if(ck2)S.open[ck2.stage]=true;else if(S.cat.indexOf("st:")===0)S.open[S.cat.slice(3)]=true;render()}else if(t.id==="citySel"){S.city=t.value;render()}else if(t.id==="sortSel"){S.sort=t.value;render()}else if(t.id==="scatSel"){S.scat=t.value;render()}else if(t.id==="ssortSel"){S.ssort=t.value;render()}else if(t.id==="qMat"){$("qNew").hidden=t.value!=="new"}});
 
 boot();
 })();
