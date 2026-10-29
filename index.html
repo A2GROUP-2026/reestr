@@ -268,6 +268,24 @@ tbody tr.rr:hover{background:var(--raise)}
 .sp-tag{font-size:11.5px;color:var(--accent);background:var(--soft);border-radius:999px;padding:1px 7px;white-space:nowrap}
 .sp-tag.in{align-self:center}
 .sp-oth{color:var(--warn)}
+.sp-grp{font-weight:600;font-size:13.5px;padding:12px 0 4px;border-top:1px solid var(--line);color:var(--ink)}
+.sx-grp td{background:#f8fafc;font-weight:700;color:var(--sx-navy,#122033);cursor:pointer;padding:12px 16px!important}
+.sx-grp td .chev2,.mrow .chev2{position:static;display:inline-block;margin-right:10px;vertical-align:middle}
+.chev2.on{transform:rotate(45deg)}
+.mrow.open td{background:#fff7ef}
+.qrow td{background:#fcfcfd;padding:10px 16px!important;border-top:1px solid #f1f5f9}
+.qcell{white-space:nowrap}
+.pc{font-variant-numeric:tabular-nums;font-weight:600}
+.pc span{font-weight:400;color:var(--muted);font-size:12px}
+.pc.best{color:var(--ok);background:var(--ok-bg);border-radius:6px;padding:0 6px;display:inline-block}
+.pc.oth{color:#475569}
+.pd{font-size:11.5px;color:var(--muted);margin-top:2px}
+.cmp-sx{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+.cmp-sx .cmp-tools{margin:0}
+.cmp-sx .sx-field,.cmp-sx .inp{flex:1 1 240px;max-width:420px}
+table.cmp-t th{white-space:nowrap}
+table.cmp-t td:first-child{min-width:240px}
+.linkish.plain{color:inherit;font-weight:600}
 .sp-cat,.sp-type{display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:13.5px;color:var(--muted)}
 .sp-cat .inp{flex:1 1 220px;min-height:36px}
 .imp-row.sp{grid-template-columns:20px minmax(0,1fr) 54px 84px 84px 40px}
@@ -478,6 +496,7 @@ function apply(){
   S.rates=Object.keys(d.rates||{}).map(function(id){return Object.assign({},d.rates[id],{id:id})}).sort(function(a,b){return (a.order||0)-(b.order||0)});
   if(!S.sheet&&S.rates[0])S.sheet=S.rates[0].id;
   S.aliases=d.aliases&&typeof d.aliases==="object"?d.aliases:{};S.notSame=d.notSame&&typeof d.notSame==="object"?d.notSame:{};S.cats=normCats(d.cats&&d.cats.length?d.cats:DEFAULT_CATS);applySupply();S.loaded=true;render();
+  if(!S.cfix&&needCatFix()){S.cfix=true;setTimeout(function(){mutate(function(d){var s=sup0(d);catFix(s);slog(s,"Объединение категорий","Арматура → Металлопрокат")}).catch(function(){S.cfix=false})},50)}
 }
 async function load(){
   var r=await gh(S.vault.data+"/contents/data.json?t="+Date.now());
@@ -1043,7 +1062,7 @@ async function exportCsv(){
 /* ---------- suppliers: suppliers, materials and dated prices live in d.supply inside the same encrypted file ---------- */
 var PT={cash:"Наличные",vat:"С НДС",other:"Другая цена"};
 var CHANNELS=["WhatsApp","Telegram","MAX","Звонок","Почта"];
-function sup0(d){if(!d.supply)d.supply={};var s=d.supply;["suppliers","materials","prices"].forEach(function(k){if(!s[k]||typeof s[k]!=="object")s[k]={}});if(!Array.isArray(s.cats))s.cats=[];if(!Array.isArray(s.log))s.log=[];return s}
+function sup0(d){if(!d.supply)d.supply={};var s=d.supply;["suppliers","materials","prices"].forEach(function(k){if(!s[k]||typeof s[k]!=="object")s[k]={}});if(!Array.isArray(s.cats))s.cats=[];if(!Array.isArray(s.log))s.log=[];catFix(s);return s}
 function slog(s,a,det){s.log.unshift({t:Date.now(),a:a,d:String(det||"").slice(0,300)});if(s.log.length>300)s.log.length=300}
 function applySupply(){
   var s=(S.data&&S.data.supply)||{};
@@ -1106,7 +1125,7 @@ function supPriceBox(id){
     '<div id="spImport" class="imp-box" hidden></div>'+
     (rows.length?'<label class="pdate">Изменённые и новые цены действуют с <input class="inp" type="date" id="sPDate" value="'+todayISO()+'"></label>':'<p class="hint">Прайса пока нет. Загрузите файл, который прислал поставщик: Excel, PDF или текст.</p><label class="pdate" hidden>Цены действуют с <input class="inp" type="date" id="sPDate" value="'+todayISO()+'"></label>')+
     '<div class="sp-head"'+(rows.length?"":" hidden")+'><span>Материал</span><span>Ед.</span><span>Наличные, ₽</span><span>С НДС, ₽</span><span></span></div>'+
-    '<div id="spRows">'+rows.map(spRowHtml).join("")+"</div></div>";
+    '<div id="spRows">'+(function(){var h="",lc=null;rows.forEach(function(r){var c=(r.m&&r.m.cat)||"Без категории";if(c!==lc){lc=c;var n=rows.filter(function(x){return ((x.m&&x.m.cat)||"Без категории")===c}).length;h+='<div class="sp-grp">'+esc(c)+' <span class="r-sub">'+n+"</span></div>"}h+=spRowHtml(r)});return h})()+"</div></div>";
 }
 /* --- import into the supplier card --- */
 function spSheetUI(){
@@ -1151,7 +1170,7 @@ function spApply(){
     if(r){if(c!=null)r.querySelector("[name=sc]").value=moneyIn(c);if(v!=null)r.querySelector("[name=sv]").value=moneyIn(v);if(x.note){var ta=r.querySelector("[name=snote]");ta.value=x.note;ta.hidden=false}upd++}
     else{box.insertAdjacentHTML("beforeend",spRowHtml({isNew:true,mat:x.mat,name:String(x.name).trim(),unit:x.unit,cash:c,vat:v,note:x.note||"",cat:cat}));box.lastElementChild.dataset.cat=cat;have[k]=box.lastElementChild;add++}});
   $("spImport").hidden=true;$("spImport").innerHTML="";S.ctx.simp=null;
-  $("panel").querySelector(".sp-head").hidden=false;var pd=$("sPDate");if(pd)pd.parentNode.hidden=false;$("spCount").textContent=box.children.length;
+  $("panel").querySelector(".sp-head").hidden=false;var pd=$("sPDate");if(pd)pd.parentNode.hidden=false;$("spCount").textContent=box.querySelectorAll(".sp-row").length;
   $("fWarn").innerHTML='<div class="warnbox">В прайс добавлено: '+add+(upd?", обновлено цен: "+upd:"")+'. Проверьте дату и нажмите «Сохранить» внизу.</div>';
 }
 function spCollect(sid){
@@ -1318,7 +1337,7 @@ function openSupplyImport(j){
           sups.forEach(function(x){if(x.dup&&s.suppliers[x.dup]){sid[x.key]=x.dup;return}var id=newId();sid[x.key]=id;s.suppliers[id]={name:x.name,phones:x.phones,channels:x.channels,cats:x.cats,note:x.note,created:now,updated:now+(i++)};x.cats.forEach(function(c){if(s.cats.indexOf(c)<0)s.cats.push(c)})});
           mats.forEach(function(x){if(x.dup&&s.materials[x.dup]){mid[x.key]=x.dup;return}var id=newId();mid[x.key]=id;s.materials[id]={cat:x.cat,name:x.name,spec:x.spec,unit:x.unit};if(s.cats.indexOf(x.cat)<0)s.cats.push(x.cat)});
           prices.forEach(function(p,k){var o=Object.assign({},p,{sup:sid[p.sup],mat:mid[p.mat],created:now+k});if(!o.archive)delete o.archive;s.prices[newId()]=o});
-          slog(s,"Загрузка из файла",(str(j.source,120)||"registry-seed.json")+": поставщиков "+ns+", материалов "+nm+", цен "+prices.length)});
+          catFix(s);slog(s,"Загрузка из файла",(str(j.source,120)||"registry-seed.json")+": поставщиков "+ns+", материалов "+nm+", цен "+prices.length)});
         S.tab="supply";closePanel();toast("Загружено: поставщиков "+ns+", материалов "+nm+", цен "+prices.length)}
       catch(e){$("pSave").disabled=false;toast(failMsg(e))}}});
 }
@@ -1339,8 +1358,9 @@ function exportSupplyCsv(){
 }
 
 /* ---------- supplier tab, laid out like the former supplier registry: menu of five views, stat cards, search + category, view body ---------- */
-var SXV=[["prices","Актуальные цены"],["chart","Динамика цен"],["suppliers","Поставщики"],["materials","Материалы"],["history","История изменений"]];
+var SXV=[["compare","Сравнение"],["materials","Материалы и цены"],["suppliers","Поставщики"],["chart","Динамика цен"],["history","История изменений"]];
 var SXI={
+  compare:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   prices:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>',
   chart:'<path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/>',
   suppliers:'<circle cx="9" cy="8" r="4"/><path d="M2 21c0-3.9 3.1-7 7-7s7 3.1 7 7"/><path d="M16 4a4 4 0 0 1 0 8M22 21c0-3-1.8-5.6-4.5-6.6"/>',
@@ -1360,7 +1380,7 @@ function sxDate(p){return p.date?pDate(p):p.archive?"Архив — дата н�
 function sxCats(){var c={};S.mats.forEach(function(m){if(m.cat)c[m.cat]=1});return Object.keys(c).sort(function(a,b){return a.localeCompare(b,"ru")})}
 
 function renderSupply(){
-  var v=S.sx||"prices";
+  if(!S.sx||S.sx==="prices")S.sx="materials";var v=S.sx;
   $("rail").innerHTML=SXV.map(function(x){return '<button class="sx-nav" data-act="sxview" data-v="'+x[0]+'" aria-current="'+(v===x[0])+'">'+ico(x[0])+"<span>"+x[1]+"</span></button>"}).join("");
   var title=SXV.filter(function(x){return x[0]===v})[0][1];
   var cards=[["suppliers","Поставщики",S.sup.length,"контактов"],["materials","Материалы",S.mats.length,"позиций"],["trend","Цены",S.prs.length,"записей в истории"],["truck","Доставка","Отдельно","не включена в цену"]];
@@ -1369,7 +1389,7 @@ function renderSupply(){
   if(!S.sup.length&&!S.mats.length){
     h+='<section class="sx-box sx-empty">'+ico("chart",34)+'<p><b>Поставщиков пока нет</b>Загрузите файл registry-seed.json из комплекта старого реестра или добавьте поставщика.</p><div class="btnrow" style="justify-content:center"><button class="sx-btn" data-act="importfile">Загрузить из файла</button><button class="btn" data-act="addsup">Добавить поставщика</button></div></section></div>';
     $("main").innerHTML=h;return}
-  if(v!=="chart"&&v!=="history"){
+  if(v!=="chart"&&v!=="history"&&v!=="compare"){
     h+='<div class="sx-box sx-filter"><label class="sx-search">'+ico("search",18)+'<input id="sxq" type="search" autocomplete="off" placeholder="Поиск по названию, материалу или телефону" value="'+esc(S.sxq||"")+'"></label>'+
       '<select id="sxCat" class="sx-field" aria-label="Категория"><option value="">Все категории</option>'+sxCats().map(function(c){return "<option"+(S.sxcat===c?" selected":"")+">"+esc(c)+"</option>"}).join("")+"</select></div>";
   }
@@ -1377,8 +1397,8 @@ function renderSupply(){
   $("main").innerHTML=h;renderSxBody();
 }
 function renderSxBody(){
-  var b=$("sxBody");if(!b)return;var v=S.sx||"prices";
-  b.innerHTML=v==="prices"?sxPrices():v==="suppliers"?sxSuppliers():v==="materials"?sxMaterials():v==="chart"?sxChart():sxHistory();
+  var b=$("sxBody");if(!b)return;var v=S.sx||"materials";
+  b.innerHTML=v==="compare"?sxCompare():v==="prices"?sxPrices():v==="suppliers"?sxSuppliers():v==="materials"?sxMaterials():v==="chart"?sxChart():sxHistory();
 }
 function sxHit(text){var q=norm(S.sxq||"").trim();if(!q)return true;var t=norm(text);if(t.indexOf(q)>=0)return true;var qd=q.replace(/\D/g,"");return qd.length>=3&&t.replace(/\D/g,"").indexOf(qd)>=0}
 function sxEmpty(t){return '<div class="sx-empty">'+ico("chart",34)+"<p>"+esc(t)+"</p></div>"}
@@ -1406,29 +1426,104 @@ function sxSuppliers(){
     return '<article class="sx-box sx-sup" data-act="sopen" data-id="'+esc(x.id)+'" tabindex="0" role="button"><div class="sx-badge">'+ico("build",20)+'</div><h2>'+esc(x.name)+"</h2>"+
       (phs.length?phs.map(function(p){return '<p class="sx-ph"><button type="button" class="tap" data-act="copy" data-v="'+fmtPhone(p)+'">'+fmtPhone(p)+"</button></p>"}).join(""):'<p class="sx-ph">Телефон не указан</p>')+
       ((x.channels||[]).length?'<div class="sx-chips">'+x.channels.map(function(c){return '<span class="sx-chip dark">'+esc(c)+"</span>"}).join("")+"</div>":"")+
-      ((x.cats||[]).length?'<div class="sx-chips">'+x.cats.map(function(c){return '<span class="sx-chip">'+esc(c)+"</span>"}).join("")+"</div>":"")+
+      (function(){var cn={},seen={};S.prs.forEach(function(p){if(p.sup!==x.id||seen[p.mat])return;seen[p.mat]=1;var m=S.matIx[p.mat];if(m){var c=m.cat||"Без категории";cn[c]=(cn[c]||0)+1}});var cs=(x.cats||[]).slice();Object.keys(cn).forEach(function(c){if(cs.indexOf(c)<0)cs.push(c)});
+        return cs.length?'<div class="sx-chips">'+cs.map(function(c){return '<span class="sx-chip">'+esc(c)+(cn[c]?" · "+cn[c]:"")+"</span>"}).join("")+"</div>":""})()+
       (x.note?'<p class="sx-sub" style="margin-top:12px">'+esc(x.note)+"</p>":"")+"</article>"}).join("")+"</div>";
 }
+
+
+/* ---------- supplier tab v2: materials with prices, comparison ---------- */
+var CAT_MERGE={"арматура":"Металлопрокат"};
+function catFix(s){var mp=function(c){var t=CAT_MERGE[norm(c||"")];return t||c};
+  Object.keys(s.materials).forEach(function(k){var m=s.materials[k];if(m&&m.cat)m.cat=mp(m.cat)});
+  Object.keys(s.suppliers).forEach(function(k){var x=s.suppliers[k];if(x&&Array.isArray(x.cats)){var o=[];x.cats.forEach(function(c){c=mp(c);if(o.indexOf(c)<0)o.push(c)});x.cats=o}});
+  var o=[];s.cats.forEach(function(c){c=mp(c);if(o.indexOf(c)<0)o.push(c)});s.cats=o}
+function needCatFix(){return S.mats.some(function(m){return CAT_MERGE[norm(m.cat||"")]})||S.sup.some(function(x){return (x.cats||[]).some(function(c){return CAT_MERGE[norm(c)]})})||S.mcats.some(function(c){return CAT_MERGE[norm(c)]})}
+/* current prices of one supplier for one material: cash / vat / other (other drops out once a newer cash/vat exists) */
+function curOf(list){var all=list.slice().sort(byTime),cur={};all.forEach(function(p){if(!cur[p.type])cur[p.type]=p});
+  if(cur.other&&((cur.cash&&pTime(cur.cash)>=pTime(cur.other)&&(cur.cash.created||0)>=(cur.other.created||0))||(cur.vat&&pTime(cur.vat)>=pTime(cur.other)&&(cur.vat.created||0)>=(cur.other.created||0))))delete cur.other;
+  var last=[cur.cash,cur.vat,cur.other].filter(Boolean).sort(byTime)[0];return {cash:cur.cash||null,vat:cur.vat||null,other:cur.other||null,last:last,all:all}}
+function priceMap(){var g={};S.prs.forEach(function(p){if(!S.supIx[p.sup]||!S.matIx[p.mat])return;var k=p.mat+"|"+p.sup;(g[k]=g[k]||[]).push(p)});
+  var by={};Object.keys(g).forEach(function(k){var a=k.split("|"),c=curOf(g[k]);c.sup=a[1];c.mat=a[0];(by[a[0]]=by[a[0]]||[]).push(c)});return by}
+function amt(p){return p&&p.amount!=null?p.amount:null}
+function pCell(c,bestC,bestV){if(!c)return '<span class="r-sub">—</span>';var h=[];
+  if(amt(c.cash)!=null)h.push('<div class="pc'+(bestC?" best":"")+'"><span>нал.</span> '+esc(money(c.cash.amount))+"</div>");
+  if(amt(c.vat)!=null)h.push('<div class="pc'+(bestV?" best":"")+'"><span>НДС</span> '+esc(money(c.vat.amount))+"</div>");
+  if(c.other)h.push('<div class="pc oth">'+esc(c.other.amount!=null?money(c.other.amount):(c.other.raw||"цена не указана"))+(c.other.amount!=null?' <span>НДС ?</span>':"")+"</div>");
+  if(!h.length)h.push('<span class="r-sub">'+esc((c.last&&c.last.raw)||"—")+"</span>");
+  if(c.last&&c.last.date)h.push('<div class="pd">с '+esc(dRu(c.last.date))+"</div>");
+  return h.join("")}
+function bestIdx(cells,type){var b=-1,v=null;cells.forEach(function(c,i){var a=c&&amt(c[type]);if(a==null&&type==="cash"&&c&&c.other)a=amt(c.other);if(a!=null&&(v==null||a<v)){v=a;b=i}});var n=cells.filter(function(c){return c&&(amt(c[type])!=null||(type==="cash"&&c.other&&amt(c.other)!=null))}).length;return n>1?b:-1}
+function catSel(id,val,first){var cs=sxCats();return '<select id="'+id+'" class="sx-field"><option value="">'+(first||"Все категории")+"</option>"+cs.map(function(c){return '<option value="'+esc(c)+'"'+(val===c?" selected":"")+">"+esc(c)+"</option>"}).join("")+"</select>"}
+
 function sxMaterials(){
-  var cnt={};S.prs.forEach(function(p){cnt[p.mat]=(cnt[p.mat]||0)+1});
-  var list=S.mats.filter(function(m){return (!S.sxcat||m.cat===S.sxcat)&&sxHit([m.name,m.spec].join(" "))}).sort(function(a,b){return norm(a.cat).localeCompare(norm(b.cat),"ru")||norm(a.name+" "+(a.spec||"")).localeCompare(norm(b.name+" "+(b.spec||"")),"ru",{numeric:true})});
-  var h='<section class="sx-box sx-tbl"><table class="sx-table"><thead><tr><th>Материал</th><th>Категория</th><th class="sx-hm">Характеристика</th><th>Цен</th></tr></thead><tbody>';
-  list.forEach(function(m){h+='<tr class="sx-row" data-act="mopen" data-id="'+esc(m.id)+'"><td><b>'+esc(m.name)+'</b><p class="sx-sub">'+esc(m.unit||"Единица не указана")+(m.spec?'<span class="sx-sm-only"> · '+esc(m.spec)+"</span>":"")+"</p></td><td>"+esc(m.cat)+'</td><td class="sx-hm sx-muted">'+esc(m.spec||"—")+'</td><td class="sx-money">'+(cnt[m.id]||0)+"</td></tr>"});
-  return h+"</tbody></table>"+(list.length?"":sxEmpty("Ничего не найдено."))+'</section><div class="btnrow"><button class="btn" data-act="addmat">Добавить материал</button></div>';
+  var pm=priceMap(),q=S.sxq||"";
+  var list=S.mats.filter(function(m){return (!S.sxcat||m.cat===S.sxcat)&&sxHit([m.name,m.spec,m.cat].join(" ")+" "+(pm[m.id]||[]).map(function(c){return S.supIx[c.sup].name}).join(" "))})
+    .sort(function(a,b){return norm(a.cat).localeCompare(norm(b.cat),"ru")||norm(a.name+" "+(a.spec||"")).localeCompare(norm(b.name+" "+(b.spec||"")),"ru",{numeric:true})});
+  if(!list.length)return '<section class="sx-box">'+sxEmpty("Ничего не найдено.")+'</section><div class="btnrow"><button class="btn" data-act="addmat">Добавить материал</button></div>';
+  var groups={},order=[];list.forEach(function(m){var c=m.cat||"Без категории";if(!groups[c]){groups[c]=[];order.push(c)}groups[c].push(m)});
+  S.mopen=S.mopen||{};S.gopen=S.gopen||{};var single=order.length===1||!!S.sxcat||!!q.trim();
+  var h='<section class="sx-box sx-tbl"><div class="sx-scroll"><table class="sx-table mt"><thead><tr><th>Материал</th><th class="hm">Ед.</th><th>Лучшая цена нал.</th><th>Лучшая цена с НДС</th><th class="hm">Поставщиков</th></tr></thead><tbody>';
+  order.forEach(function(cat){var ms=groups[cat],open=single||S.gopen[cat];
+    h+='<tr class="sx-grp" data-act="gtog" data-c="'+esc(cat)+'"><td colspan="5"><span class="chev2'+(open?" on":"")+'"></span>'+esc(cat)+' <span class="r-sub">'+ms.length+"</span></td></tr>";
+    if(!open)return;
+    ms.forEach(function(m){var cs=pm[m.id]||[],bc=null,bv=null;
+      cs.forEach(function(c){var a=amt(c.cash);if(a==null&&c.other)a=amt(c.other);if(a!=null&&(!bc||a<bc.a))bc={a:a,c:c,o:amt(c.cash)==null};var v=amt(c.vat);if(v!=null&&(!bv||v<bv.a))bv={a:v,c:c}});
+      var ex=!!S.mopen[m.id];
+      h+='<tr class="sx-row mrow'+(ex?" open":"")+'" data-act="mtog" data-id="'+esc(m.id)+'"><td><span class="chev2'+(ex?" on":"")+'"></span><b>'+esc(m.name)+"</b>"+(m.spec?'<p class="sx-sub">'+esc(m.spec)+"</p>":"")+'</td><td class="hm">'+esc(m.unit||"—")+"</td>"+
+        '<td class="sx-money">'+(bc?esc(money(bc.a))+(bc.o?' <span class="r-sub">НДС ?</span>':"")+'<p class="sx-sub">'+esc(S.supIx[bc.c.sup].name)+"</p>":'<span class="r-sub">—</span>')+"</td>"+
+        '<td class="sx-money">'+(bv?esc(money(bv.a))+'<p class="sx-sub">'+esc(S.supIx[bv.c.sup].name)+"</p>":'<span class="r-sub">—</span>')+"</td>"+
+        '<td class="hm">'+(cs.length||'<span class="r-sub">0</span>')+"</td></tr>";
+      if(ex){cs.slice().sort(function(a,b){var x=amt(a.cash)!=null?amt(a.cash):amt(a.vat)!=null?amt(a.vat):amt(a.other),y=amt(b.cash)!=null?amt(b.cash):amt(b.vat)!=null?amt(b.vat):amt(b.other);return (x==null?1e15:x)-(y==null?1e15:y)}).forEach(function(c){
+          var x=S.supIx[c.sup],raw=c.last&&c.last.raw;
+          h+='<tr class="qrow"><td colspan="2"><button type="button" class="linkish" data-act="sopen" data-id="'+esc(c.sup)+'">'+esc(x.name)+"</button>"+(raw?'<p class="sx-sub">'+esc(raw)+"</p>":"")+'</td><td colspan="3" class="qcell">'+pCell(c)+"</td></tr>"});
+        h+='<tr class="qrow"><td colspan="5"><button type="button" class="btn small" data-act="mopen" data-id="'+esc(m.id)+'">Карточка материала</button> <button type="button" class="btn small" data-act="mchart" data-id="'+esc(m.id)+'">Динамика цены</button>'+(cs.length?"":' <span class="r-sub">Цен на этот материал пока нет.</span>')+"</td></tr>"}
+    })});
+  return h+'</tbody></table></div></section><div class="btnrow" style="margin-top:12px"><button class="btn" data-act="addmat">Добавить материал</button></div>';
+}
+
+function sxCompare(){
+  var pm=priceMap(),cat=S.cmpSCat||"";
+  var supsIn=S.sup.filter(function(x){return S.prs.some(function(p){var m=S.matIx[p.mat];return p.sup===x.id&&m&&(!cat||m.cat===cat)})}).sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")});
+  S.scmp=(S.scmp||[]).filter(function(id){return S.supIx[id]});
+  if(S.scmpAuto!==cat){S.scmpAuto=cat;if(cat)S.scmp=supsIn.slice(0,6).map(function(x){return x.id})}
+  var sel=S.scmp.map(function(id){return S.supIx[id]}).filter(Boolean);
+  var h='<section class="sx-box sx-pad cmp-sx"><div class="cmp-tools">'+catSel("scmpCat",cat,"Выберите категорию")+
+    '<select id="scmpAdd" class="sx-field"><option value="">+ Добавить поставщика</option>'+supsIn.filter(function(x){return S.scmp.indexOf(x.id)<0}).map(function(x){return '<option value="'+esc(x.id)+'">'+esc(x.name)+"</option>"}).join("")+"</select></div>"+
+    (sel.length?'<div class="chips cmp-chips">'+sel.map(function(x){return '<span class="chip">'+esc(x.name)+'<button type="button" data-act="scmpdel" data-id="'+esc(x.id)+'" aria-label="Убрать">×</button></span>'}).join("")+"</div>":"")+
+    '<div class="cmp-tools"><input class="inp" id="scmpQ" type="search" placeholder="Найти материал, например «уголок 50»" value="'+esc(S.scmpQ||"")+'"><label class="check"><input type="checkbox" id="scmpCommon"'+(S.scmpCommon?" checked":"")+"> Только то, что есть хотя бы у двух</label></div></section>";
+  if(!sel.length)return h+'<section class="sx-box">'+sxEmpty(cat?"В этой категории пока нет цен ни у одного поставщика.":"Выберите категорию, например «Блоки», и поставщики встанут рядом. Или добавьте поставщиков вручную.")+"</section>";
+  var qq=norm(S.scmpQ||"").trim();
+  var mats=S.mats.filter(function(m){if(cat&&m.cat!==cat)return false;var cs=pm[m.id]||[],n=cs.filter(function(c){return S.scmp.indexOf(c.sup)>=0}).length;if(!n)return false;if(S.scmpCommon&&n<2)return false;if(qq&&norm(matLabel(m)).indexOf(qq)<0)return false;return true})
+    .sort(function(a,b){return norm(a.cat).localeCompare(norm(b.cat),"ru")||norm(a.name+" "+(a.spec||"")).localeCompare(norm(b.name+" "+(b.spec||"")),"ru",{numeric:true})});
+  h+='<section class="sx-box sx-tbl"><div class="sx-scroll"><table class="sx-table cmp-t"><thead><tr><th>Материал</th>'+sel.map(function(x){return '<th><button type="button" class="linkish" data-act="sopen" data-id="'+esc(x.id)+'">'+esc(x.name)+"</button></th>"}).join("")+"</tr></thead><tbody>";
+  var lastCat="";
+  mats.forEach(function(m){if(!cat&&m.cat!==lastCat){lastCat=m.cat;h+='<tr class="sx-grp"><td colspan="'+(sel.length+1)+'">'+esc(m.cat||"Без категории")+"</td></tr>"}
+    var cells=sel.map(function(x){return (pm[m.id]||[]).filter(function(c){return c.sup===x.id})[0]||null}),bc=bestIdx(cells,"cash"),bv=bestIdx(cells,"vat");
+    h+='<tr><td><button type="button" class="linkish plain" data-act="mopen" data-id="'+esc(m.id)+'">'+esc(m.name)+"</button>"+(m.spec?'<p class="sx-sub">'+esc(m.spec)+"</p>":"")+'<p class="sx-sub">'+esc(m.unit||"")+"</p></td>"+cells.map(function(c,i){return '<td class="qcell">'+pCell(c,i===bc,i===bv)+"</td>"}).join("")+"</tr>"});
+  if(!mats.length)h+='<tr><td colspan="'+(sel.length+1)+'">'+sxEmpty("Ничего не найдено.")+"</td></tr>";
+  return h+'</tbody></table></div></section><p class="hint" style="margin-top:10px">Зелёным отмечена самая низкая цена в строке отдельно для наличных и для цен с НДС. «НДС ?» — в прайсе не указано, с НДС цена или без.</p>';
 }
 
 function sxChart(){
-  var mats=S.mats.slice().sort(function(a,b){return norm(a.cat+a.name+(a.spec||"")).localeCompare(norm(b.cat+b.name+(b.spec||"")),"ru",{numeric:true})});
-  if(!S.chMat||!S.matIx[S.chMat]){var withP=mats.filter(function(m){return S.prs.some(function(p){return p.mat===m.id&&p.amount!=null})})[0];S.chMat=(withP||mats[0]||{}).id}
+  var pm=priceMap(),cat=S.chCat||"",sup=S.chSup||"";
+  var mats=S.mats.filter(function(m){if(cat&&m.cat!==cat)return false;var cs=pm[m.id]||[];if(sup&&!cs.some(function(c){return c.sup===sup}))return false;return S.prs.some(function(p){return p.mat===m.id&&p.amount!=null})})
+    .sort(function(a,b){return norm(a.name+" "+(a.spec||"")).localeCompare(norm(b.name+" "+(b.spec||"")),"ru",{numeric:true})});
+  if(!S.chMat||mats.every(function(m){return m.id!==S.chMat}))S.chMat=(mats[0]||{}).id;
+  var sups=S.sup.filter(function(x){return S.prs.some(function(p){var m=S.matIx[p.mat];return p.sup===x.id&&p.amount!=null&&m&&(!cat||m.cat===cat)})}).sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")});
   var ps=S.prs.filter(function(p){return p.mat===S.chMat&&p.amount!=null});
   var avail=[];ps.forEach(function(p){if(avail.indexOf(p.sup)<0&&S.supIx[p.sup])avail.push(p.sup)});
   avail.sort(function(a,b){return norm(S.supIx[a].name).localeCompare(norm(S.supIx[b].name),"ru")});
   if(!S.chSel||S.chSelFor!==S.chMat){S.chSel=avail.slice(0,4);S.chSelFor=S.chMat}
-  var h='<section class="sx-box sx-chart"><div class="sx-chart-l"><label class="sx-lbl" for="chMat">Материал</label><select id="chMat" class="sx-field">'+mats.map(function(m){return '<option value="'+esc(m.id)+'"'+(m.id===S.chMat?" selected":"")+">"+esc(m.cat+" · "+m.name+(m.spec?" "+m.spec:""))+"</option>"}).join("")+"</select>"+
-    '<p class="sx-lbl" style="margin-top:20px">Поставщики для сравнения</p><div class="sx-checks">'+(avail.length?avail.map(function(id,i){return '<label><input type="checkbox" name="chSup" value="'+esc(id)+'"'+(S.chSel.indexOf(id)>=0?" checked":"")+'><i style="background:'+LINE[i%LINE.length]+'"></i>'+esc(S.supIx[id].name)+"</label>"}).join(""):'<p class="sx-sub">По материалу пока нет цен.</p>')+"</div></div>"+
-    '<div class="sx-chart-r"><h2>Изменение цены во времени</h2><p class="sx-sub">На график попадают только записи с указанной датой.</p><div class="sx-plot">'+sxPlot(ps,avail)+"</div></div></section>";
+  var h='<section class="sx-box sx-chart"><div class="sx-chart-l">'+
+    '<label class="sx-lbl" for="chCat">1. Категория</label>'+catSel("chCat",cat)+
+    '<label class="sx-lbl" for="chSupF" style="margin-top:14px">2. Поставщик (необязательно)</label><select id="chSupF" class="sx-field"><option value="">Все поставщики</option>'+sups.map(function(x){return '<option value="'+esc(x.id)+'"'+(sup===x.id?" selected":"")+">"+esc(x.name)+"</option>"}).join("")+"</select>"+
+    '<label class="sx-lbl" for="chMat" style="margin-top:14px">3. Материал</label><select id="chMat" class="sx-field">'+(mats.length?mats.map(function(m){return '<option value="'+esc(m.id)+'"'+(m.id===S.chMat?" selected":"")+">"+esc(matLabel(m))+"</option>"}).join(""):'<option value="">Нет материалов с ценами</option>')+"</select>"+
+    '<p class="sx-lbl" style="margin-top:20px">Поставщики на графике</p><div class="sx-checks">'+(avail.length?avail.map(function(id,i){return '<label><input type="checkbox" name="chSup" value="'+esc(id)+'"'+(S.chSel.indexOf(id)>=0?" checked":"")+'><i style="background:'+LINE[i%LINE.length]+'"></i>'+esc(S.supIx[id].name)+"</label>"}).join(""):'<p class="sx-sub">Нет цен</p>')+"</div></div>"+
+    '<div class="sx-chart-r"><h2>'+esc(S.chMat&&S.matIx[S.chMat]?matLabel(S.matIx[S.chMat]):"Изменение цены во времени")+'</h2><p class="sx-sub">На график попадают только записи с указанной датой.</p><div class="sx-plot">'+sxPlot(ps,avail)+"</div></div></section>";
   return h;
 }
+
 function sxPlot(ps,avail){
   var series=[];S.chSel.forEach(function(id){var i=avail.indexOf(id);if(i<0)return;var pts={};ps.forEach(function(p){if(p.sup===id&&p.date){var o=pts[p.date];if(!o||(p.type==="cash"&&o.type!=="cash"))pts[p.date]=p}});
     var arr=Object.keys(pts).sort().map(function(d){return {d:d,t:Date.parse(d+"T00:00:00"),v:pts[d].amount}});if(arr.length)series.push({id:id,c:LINE[i%LINE.length],pts:arr})});
@@ -1505,6 +1600,10 @@ document.addEventListener("click",async function(ev){
   else if(a==="sxview"){S.sx=el.dataset.v;render();window.scrollTo(0,0)}
   else if(a==="sxreset"){S.hf=null;renderSxBody()}
   else if(a==="raterow"){ev.stopPropagation();openRateRow(+el.dataset.s,+el.dataset.r)}
+  else if(a==="gtog"){S.gopen=S.gopen||{};S.gopen[el.dataset.c]=!S.gopen[el.dataset.c];renderSxBody()}
+  else if(a==="mtog"){S.mopen=S.mopen||{};S.mopen[el.dataset.id]=!S.mopen[el.dataset.id];renderSxBody()}
+  else if(a==="mchart"){var mm=S.matIx[el.dataset.id];S.chCat=mm?mm.cat:"";S.chSup="";S.chMat=el.dataset.id;S.sx="chart";render();window.scrollTo(0,0)}
+  else if(a==="scmpdel"){S.scmp=(S.scmp||[]).filter(function(x){return x!==el.dataset.id});renderSxBody()}
   else if(a==="sxl"){var sf=$("sxlFile");sf.value="";sf.click()}
   else if(a==="spdf"){var pf=$("spdfFile");pf.value="";pf.click()}
   else if(a==="spaste"){openSupPaste("")}
@@ -1512,7 +1611,7 @@ document.addEventListener("click",async function(ev){
   else if(a==="spchk"){var si2=S.ctx.simp[+el.dataset.i];si2.on=el.checked;el.closest(".imp-row").classList.toggle("off",!si2.on);var sb=$("panel").querySelector("[data-act=spdo]");if(sb)sb.textContent="Добавить в прайс: "+S.ctx.simp.filter(function(x){return x.on}).length;return}
   else if(a==="spdo"){spApply()}
   else if(a==="spcancel"){$("spImport").hidden=true;$("spImport").innerHTML="";S.ctx.simp=null}
-  else if(a==="spdrop"){el.closest(".sp-row").remove();$("spCount").textContent=$("spRows").children.length}
+  else if(a==="spdrop"){el.closest(".sp-row").remove();$("spCount").textContent=$("spRows").querySelectorAll(".sp-row").length}
   else if(a==="sphist"){var shb=el.closest(".sp-row").querySelector(".ph");shb.hidden=!shb.hidden}
   else if(a==="spnote"){var sta=el.closest(".sp-row").querySelector("[name=snote]");sta.hidden=!sta.hidden;if(!sta.hidden)sta.focus()}
   else if(a==="spsec"){S.ctx.sxl.sec=el.checked;$("spImport").innerHTML=spSheetUI();return}
@@ -1560,11 +1659,17 @@ document.addEventListener("keydown",function(ev){
 document.addEventListener("input",function(ev){
   var sdi=ev.target.dataset&&ev.target.dataset.simp;if(sdi&&S.ctx&&S.ctx.simp){S.ctx.simp[+ev.target.dataset.i][sdi]=ev.target.value;return}
   var di=ev.target.dataset&&ev.target.dataset.imp;if(di&&S.ctx&&S.ctx.imp){S.ctx.imp[+ev.target.dataset.i][di]=ev.target.value;return}
+  if(ev.target.id==="scmpQ"){S.scmpQ=ev.target.value;var sp=ev.target.selectionStart;renderSxBody();var se=$("scmpQ");if(se){se.focus();try{se.setSelectionRange(sp,sp)}catch(e){}}return}
   if(ev.target.id==="cmpQ"){S.cmpQ=ev.target.value;var pos=ev.target.selectionStart;render();var ne=$("cmpQ");if(ne){ne.focus();try{ne.setSelectionRange(pos,pos)}catch(e){}}return}
   if(ev.target.id==="q"){S.q=ev.target.value;if(S.tab==="rates")S.tab="people";render()}else if(ev.target.id==="sxq"){S.sxq=ev.target.value;renderSxBody()}});
 document.addEventListener("change",function(ev){var t=ev.target;
   if(t.id==="importFile"&&t.files&&t.files[0]){var rd=new FileReader();rd.onload=function(){try{var j=JSON.parse(rd.result);if(j&&!Array.isArray(j)&&(Array.isArray(j.suppliers)||Array.isArray(j.materials))){openSupplyImport(j);return}var l=Array.isArray(j)?j:j.contractors;if(!Array.isArray(l))throw 0;openFileImport(l)}catch(e){toast("Не удалось прочитать файл. Нужен файл .json, подготовленный для реестра")}};rd.readAsText(t.files[0]);return}
   if(t.id==="xlFile"&&t.files&&t.files[0]){readExcel(t.files[0]);return}
+  if(t.id==="scmpCat"){S.cmpSCat=t.value;renderSxBody();return}
+  if(t.id==="scmpAdd"&&t.value){S.scmp=(S.scmp||[]).concat([t.value]);renderSxBody();return}
+  if(t.id==="scmpCommon"){S.scmpCommon=t.checked;renderSxBody();return}
+  if(t.id==="chCat"){S.chCat=t.value;S.chSup="";renderSxBody();return}
+  if(t.id==="chSupF"){S.chSup=t.value;renderSxBody();return}
   if(t.id==="sxlFile"&&t.files&&t.files[0]){readSupExcel(t.files[0]);return}
   if(t.id==="spdfFile"&&t.files&&t.files[0]){var bx=$("spImport");bx.hidden=false;bx.innerHTML='<p class="hint">Читаю PDF…</p>';pdfText(t.files[0]).then(function(tx){openSupPaste(tx);if(!$("spRes").innerHTML.trim()||!S.ctx.simp||!S.ctx.simp.length)$("spRes").innerHTML='<div class="warnbox">В PDF не нашлось строк с ценой в конце. Если это таблица с несколькими колонками цен, попросите у поставщика тот же прайс в Excel.</div>'}).catch(function(){bx.innerHTML='<div class="warnbox">Не удалось прочитать PDF. Если это скан или фото, вставьте текст вручную или попросите прайс в Excel.</div>'});return}
   if(t.dataset&&t.dataset.act==="spcol"){S.ctx.sxl.g[t.dataset.key]=+t.value;$("spImport").innerHTML=spSheetUI();return}
