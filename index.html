@@ -273,6 +273,12 @@ tbody tr.rr:hover{background:var(--raise)}
 .sx-grp td .chev2,.mrow .chev2{position:static;display:inline-block;margin-right:10px;vertical-align:middle}
 .chev2.on{transform:rotate(45deg)}
 .mrow.open td{background:#fff7ef}
+.srow td{background:#fff;padding-left:28px!important}
+.srow.open td{background:#fff7ef}
+.srow .chev2{position:static;display:inline-block;margin-right:10px;vertical-align:middle}
+.prow td{background:#fcfcfd;padding-left:56px!important;cursor:pointer}
+.prow td:not(:first-child){padding-left:16px!important}
+.prow:hover td{background:#fffaf5}
 .qrow td{background:#fcfcfd;padding:10px 16px!important;border-top:1px solid #f1f5f9}
 .qcell{white-space:nowrap}
 .pc{font-variant-numeric:tabular-nums;font-weight:600}
@@ -1457,31 +1463,32 @@ function bestIdx(cells,type){var b=-1,v=null;cells.forEach(function(c,i){var a=c
 function catSel(id,val,first){var cs=sxCats();return '<select id="'+id+'" class="sx-field"><option value="">'+(first||"Все категории")+"</option>"+cs.map(function(c){return '<option value="'+esc(c)+'"'+(val===c?" selected":"")+">"+esc(c)+"</option>"}).join("")+"</select>"}
 
 function sxMaterials(){
-  var pm=priceMap(),q=S.sxq||"";
-  var list=S.mats.filter(function(m){return (!S.sxcat||m.cat===S.sxcat)&&sxHit([m.name,m.spec,m.cat].join(" ")+" "+(pm[m.id]||[]).map(function(c){return S.supIx[c.sup].name}).join(" "))})
-    .sort(function(a,b){return norm(a.cat).localeCompare(norm(b.cat),"ru")||norm(a.name+" "+(a.spec||"")).localeCompare(norm(b.name+" "+(b.spec||"")),"ru",{numeric:true})});
+  var pm=priceMap(),q=(S.sxq||"").trim();
+  var list=S.mats.filter(function(m){return (!S.sxcat||m.cat===S.sxcat)&&sxHit([m.name,m.spec,m.cat].join(" ")+" "+(pm[m.id]||[]).map(function(c){return S.supIx[c.sup].name}).join(" "))});
   if(!list.length)return '<section class="sx-box">'+sxEmpty("Ничего не найдено.")+'</section><div class="btnrow"><button class="btn" data-act="addmat">Добавить материал</button></div>';
-  var groups={},order=[];list.forEach(function(m){var c=m.cat||"Без категории";if(!groups[c]){groups[c]=[];order.push(c)}groups[c].push(m)});
-  S.mopen=S.mopen||{};S.gopen=S.gopen||{};var single=order.length===1||!!S.sxcat||!!q.trim();
-  var h='<section class="sx-box sx-tbl"><div class="sx-scroll"><table class="sx-table mt"><thead><tr><th>Материал</th><th class="hm">Ед.</th><th>Лучшая цена нал.</th><th>Лучшая цена с НДС</th><th class="hm">Поставщиков</th></tr></thead><tbody>';
-  order.forEach(function(cat){var ms=groups[cat],open=single||S.gopen[cat];
-    h+='<tr class="sx-grp" data-act="gtog" data-c="'+esc(cat)+'"><td colspan="5"><span class="chev2'+(open?" on":"")+'"></span>'+esc(cat)+' <span class="r-sub">'+ms.length+"</span></td></tr>";
+  var groups={},order=[];list.forEach(function(m){var c=m.cat||"Без категории";if(!groups[c]){groups[c]={mats:[],sups:{}};order.push(c)}groups[c].mats.push(m);(pm[m.id]||[]).forEach(function(cc){(groups[c].sups[cc.sup]=groups[c].sups[cc.sup]||[]).push({m:m,c:cc})})});
+  order.sort(function(a,b){return a.localeCompare(b,"ru")});
+  S.gopen=S.gopen||{};S.sopen=S.sopen||{};var auto=!!S.sxcat||!!q;
+  var h='<section class="sx-box sx-tbl"><div class="sx-scroll"><table class="sx-table mt"><thead><tr><th>Категория / поставщик / материал</th><th class="hm">Ед.</th><th>Наличные</th><th>С НДС</th><th class="hm">Дата</th></tr></thead><tbody>';
+  order.forEach(function(cat){var g=groups[cat],sids=Object.keys(g.sups),open=auto||!!S.gopen[cat];
+    sids.sort(function(a,b){return norm(S.supIx[a].name).localeCompare(norm(S.supIx[b].name),"ru")});
+    var noPrice=g.mats.filter(function(m){return !(pm[m.id]||[]).length});
+    h+='<tr class="sx-grp" data-act="gtog" data-c="'+esc(cat)+'"><td colspan="5"><span class="chev2'+(open?" on":"")+'"></span>'+esc(cat)+' <span class="r-sub">поставщиков: '+sids.length+" · позиций: "+g.mats.length+"</span></td></tr>";
     if(!open)return;
-    ms.forEach(function(m){var cs=pm[m.id]||[],bc=null,bv=null;
-      cs.forEach(function(c){var a=amt(c.cash);if(a==null&&c.other)a=amt(c.other);if(a!=null&&(!bc||a<bc.a))bc={a:a,c:c,o:amt(c.cash)==null};var v=amt(c.vat);if(v!=null&&(!bv||v<bv.a))bv={a:v,c:c}});
-      var ex=!!S.mopen[m.id];
-      h+='<tr class="sx-row mrow'+(ex?" open":"")+'" data-act="mtog" data-id="'+esc(m.id)+'"><td><span class="chev2'+(ex?" on":"")+'"></span><b>'+esc(m.name)+"</b>"+(m.spec?'<p class="sx-sub">'+esc(m.spec)+"</p>":"")+'</td><td class="hm">'+esc(m.unit||"—")+"</td>"+
-        '<td class="sx-money">'+(bc?esc(money(bc.a))+(bc.o?' <span class="r-sub">НДС ?</span>':"")+'<p class="sx-sub">'+esc(S.supIx[bc.c.sup].name)+"</p>":'<span class="r-sub">—</span>')+"</td>"+
-        '<td class="sx-money">'+(bv?esc(money(bv.a))+'<p class="sx-sub">'+esc(S.supIx[bv.c.sup].name)+"</p>":'<span class="r-sub">—</span>')+"</td>"+
-        '<td class="hm">'+(cs.length||'<span class="r-sub">0</span>')+"</td></tr>";
-      if(ex){cs.slice().sort(function(a,b){var x=amt(a.cash)!=null?amt(a.cash):amt(a.vat)!=null?amt(a.vat):amt(a.other),y=amt(b.cash)!=null?amt(b.cash):amt(b.vat)!=null?amt(b.vat):amt(b.other);return (x==null?1e15:x)-(y==null?1e15:y)}).forEach(function(c){
-          var x=S.supIx[c.sup],raw=c.last&&c.last.raw;
-          h+='<tr class="qrow"><td colspan="2"><button type="button" class="linkish" data-act="sopen" data-id="'+esc(c.sup)+'">'+esc(x.name)+"</button>"+(raw?'<p class="sx-sub">'+esc(raw)+"</p>":"")+'</td><td colspan="3" class="qcell">'+pCell(c)+"</td></tr>"});
-        h+='<tr class="qrow"><td colspan="5"><button type="button" class="btn small" data-act="mopen" data-id="'+esc(m.id)+'">Карточка материала</button> <button type="button" class="btn small" data-act="mchart" data-id="'+esc(m.id)+'">Динамика цены</button>'+(cs.length?"":' <span class="r-sub">Цен на этот материал пока нет.</span>')+"</td></tr>"}
-    })});
+    if(!sids.length)h+='<tr class="qrow"><td colspan="5"><span class="r-sub">В этой категории пока нет цен ни у одного поставщика.</span></td></tr>';
+    sids.forEach(function(sid){var x=S.supIx[sid],items=g.sups[sid],k=cat+"|"+sid,so=(q&&true)||!!S.sopen[k],ph=(x.phones||[])[0];
+      var dates=items.map(function(it){return it.c.last&&it.c.last.date}).filter(Boolean).sort();var lastD=dates[dates.length-1];
+      h+='<tr class="sx-row srow'+(so?" open":"")+'" data-act="stog" data-k="'+esc(k)+'"><td colspan="2"><span class="chev2'+(so?" on":"")+'"></span><b>'+esc(x.name)+'</b> <span class="r-sub">'+items.length+" поз.</span>"+(ph?'<p class="sx-sub" style="margin-left:22px">'+fmtPhone(ph)+"</p>":"")+'</td><td colspan="2"><button type="button" class="btn small" data-act="sopen" data-id="'+esc(sid)+'">Карточка поставщика</button></td><td class="hm sx-muted">'+(lastD?"обновлено "+esc(dRu(lastD)):"")+"</td></tr>";
+      if(!so)return;
+      items.sort(function(a,b){return norm(a.m.name+" "+(a.m.spec||"")).localeCompare(norm(b.m.name+" "+(b.m.spec||"")),"ru",{numeric:true})}).forEach(function(it){var c=it.c,m=it.m,raw=c.last&&c.last.raw;
+        var cash=amt(c.cash)!=null?money(c.cash.amount):c.other&&amt(c.other)!=null?money(c.other.amount)+" (НДС ?)":"—",vat=amt(c.vat)!=null?money(c.vat.amount):"—";
+        if(cash==="—"&&vat==="—"&&c.other)cash=c.other.raw||"цена не указана";if(raw&&norm(raw)===norm(cash))raw="";
+        h+='<tr class="prow" data-act="mopen" data-id="'+esc(m.id)+'"><td><b>'+esc(m.name)+"</b>"+(m.spec?'<p class="sx-sub">'+esc(m.spec)+"</p>":"")+(raw?'<p class="sx-sub">'+esc(raw)+"</p>":"")+'</td><td class="hm">'+esc(m.unit||"—")+'</td><td class="sx-money">'+esc(cash)+'</td><td class="sx-money">'+esc(vat)+'</td><td class="hm sx-muted">'+(c.last&&c.last.date?esc(dRu(c.last.date)):"")+"</td></tr>"})});
+    if(noPrice.length&&(S.gopen[cat+"|none"]||q))noPrice.forEach(function(m){h+='<tr class="prow" data-act="mopen" data-id="'+esc(m.id)+'"><td><b>'+esc(m.name)+"</b>"+(m.spec?'<p class="sx-sub">'+esc(m.spec)+"</p>":"")+'</td><td class="hm">'+esc(m.unit||"—")+'</td><td colspan="3"><span class="r-sub">цен нет</span></td></tr>'});
+    else if(noPrice.length)h+='<tr class="qrow"><td colspan="5"><button type="button" class="linkish" data-act="gtog" data-c="'+esc(cat+"|none")+'">Материалы без цен: '+noPrice.length+"</button></td></tr>";
+  });
   return h+'</tbody></table></div></section><div class="btnrow" style="margin-top:12px"><button class="btn" data-act="addmat">Добавить материал</button></div>';
 }
-
 function sxCompare(){
   var pm=priceMap(),cat=S.cmpSCat||"";
   var supsIn=S.sup.filter(function(x){return S.prs.some(function(p){var m=S.matIx[p.mat];return p.sup===x.id&&m&&(!cat||m.cat===cat)})}).sort(function(a,b){return norm(a.name).localeCompare(norm(b.name),"ru")});
@@ -1601,6 +1608,7 @@ document.addEventListener("click",async function(ev){
   else if(a==="sxreset"){S.hf=null;renderSxBody()}
   else if(a==="raterow"){ev.stopPropagation();openRateRow(+el.dataset.s,+el.dataset.r)}
   else if(a==="gtog"){S.gopen=S.gopen||{};S.gopen[el.dataset.c]=!S.gopen[el.dataset.c];renderSxBody()}
+  else if(a==="stog"){if(ev.target.closest("[data-act=sopen]"))return;S.sopen=S.sopen||{};S.sopen[el.dataset.k]=!S.sopen[el.dataset.k];renderSxBody()}
   else if(a==="mtog"){S.mopen=S.mopen||{};S.mopen[el.dataset.id]=!S.mopen[el.dataset.id];renderSxBody()}
   else if(a==="mchart"){var mm=S.matIx[el.dataset.id];S.chCat=mm?mm.cat:"";S.chSup="";S.chMat=el.dataset.id;S.sx="chart";render();window.scrollTo(0,0)}
   else if(a==="scmpdel"){S.scmp=(S.scmp||[]).filter(function(x){return x!==el.dataset.id});renderSxBody()}
